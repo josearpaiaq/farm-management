@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nav Shell — Farm Management</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: var(--font-size-base);
+    background: var(--bg);
+    color: var(--text-primary);
+  }
+
+  .shell {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* --- Sidebar (desktop) / Drawer (mobile) --- */
+  .sidebar {
+    width: 220px;
+    background: var(--accent-dark);
+    color: var(--bg);
+    padding: 24px 16px;
+    flex-shrink: 0;
+  }
+
+  .sidebar .brand {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sidebar .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--bg);
+    opacity: 0.75;
+    font-size: 0.95rem;
+  }
+
+  .sidebar .nav-item.active {
+    background: rgba(253, 246, 236, 0.15);
+    opacity: 1;
+    font-weight: 600;
+  }
+
+  .main {
+    flex: 1;
+    padding: 24px;
+  }
+
+  .topbar {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .menu-trigger {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .placeholder-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    height: 28px;
+    margin-top: 10px;
+  }
+
+  /* --- Drawer overlay (mobile only) --- */
+  .drawer-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transition: opacity 220ms ease;
+    z-index: 10;
+  }
+
+  .drawer-overlay.open {
+    opacity: 1;
+  }
+
+  /* --- Responsive: below Tailwind's md (768px) --- */
+  @media (max-width: 767px) {
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      transform: translateX(-100%);
+      transition: transform 220ms ease;
+      z-index: 20;
+    }
+
+    .sidebar.open {
+      transform: translateX(0);
+    }
+
+    .topbar {
+      display: flex;
+    }
+
+    .drawer-overlay {
+      display: block;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <div class="drawer-overlay" id="overlay" onclick="closeDrawer()"></div>
+
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">🐄 Farm Mgmt</div>
+      <nav>
+        <a class="nav-item active" href="animals-list.html">🐄 Animals</a>
+        <a class="nav-item" href="#">🏡 Farms</a>
+        <a class="nav-item" href="#">📋 Notes</a>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <div class="topbar">
+        <button class="menu-trigger" onclick="openDrawer()">☰ Menu</button>
+        <strong>Animals</strong>
+      </div>
+
+      <h2 style="margin-top:0;">Animals</h2>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">
+        Nav shell mockup — resize below 768px to see the drawer. See
+        animals-list.html for the actual list screen.
+      </p>
+      <div class="placeholder-block"></div>
+      <div class="placeholder-block"></div>
+    </div>
+  </div>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    function openDrawer() {
+      sidebar.classList.add('open');
+      overlay.classList.add('open');
+    }
+
+    function closeDrawer() {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+    }
+  </script>
+</body>
+</html>

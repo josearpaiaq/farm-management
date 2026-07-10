@@ -1,0 +1,29 @@
+/*
+ * Design tokens — Earthy / Rustic, light mode.
+ *
+ * Components must reference these custom properties instead of hardcoding
+ * colors. Adding a dark theme or a custom theme later means defining a
+ * second token set (e.g. under [data-theme="dark"]) — no component changes.
+ *
+ * Breakpoint: 768px, matching Tailwind's default `md` breakpoint, since the
+ * production frontend is built with Tailwind CSS.
+ */
+
+:root {
+  --bg: #fdf6ec;
+  --surface: #ffffff;
+  --border: #e7d9c3;
+
+  --text-primary: #4a3a2a;
+  --text-secondary: #8a7355;
+
+  --accent: #7c9070;
+  --accent-dark: #5b4630;
+
+  --status-active: #7c9070;
+  --status-inactive: #b08968;
+  --status-warning: #c9a227;
+  --status-danger: #b5533c;
+
+  --font-size-base: 16px;
+}

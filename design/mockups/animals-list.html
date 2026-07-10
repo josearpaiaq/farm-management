@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animals List — Farm Management</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: var(--font-size-base);
+    background: var(--bg);
+    color: var(--text-primary);
+  }
+
+  .shell {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    width: 220px;
+    background: var(--accent-dark);
+    color: var(--bg);
+    padding: 24px 16px;
+    flex-shrink: 0;
+  }
+
+  .sidebar .brand {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 24px;
+  }
+
+  .sidebar nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sidebar .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--bg);
+    opacity: 0.75;
+    font-size: 0.95rem;
+  }
+
+  .sidebar .nav-item.active {
+    background: rgba(253, 246, 236, 0.15);
+    opacity: 1;
+    font-weight: 600;
+  }
+
+  .main {
+    flex: 1;
+    padding: 24px;
+  }
+
+  /* --- Header row: count, +New, filters, search --- */
+  .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .list-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 0.95rem;
+    cursor: pointer;
+  }
+
+  .toolbar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .toolbar select,
+  .toolbar input {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+
+  .toolbar input[type="search"] {
+    flex: 1;
+    min-width: 160px;
+  }
+
+  .status {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .status-active { color: var(--status-active); }
+  .status-inactive { color: var(--status-inactive); }
+  .status-warning { color: var(--status-warning); }
+  .status-danger { color: var(--status-danger); }
+
+  /* --- Desktop: table (>= Tailwind's md, 768px) --- */
+  .animals-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .animals-table th {
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    background: var(--bg);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .animals-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+
+  .animals-table tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* --- Mobile: stacked cards (< 768px) --- */
+  .animals-cards {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .animal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .animal-card .tag {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .animal-card .meta {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+
+  @media (max-width: 767px) {
+    .sidebar { display: none; }
+    .animals-table { display: none; }
+    .animals-cards { display: flex; }
+  }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">🐄 Farm Mgmt</div>
+      <nav>
+        <a class="nav-item active" href="#">🐄 Animals</a>
+        <a class="nav-item" href="#">🏡 Farms</a>
+        <a class="nav-item" href="#">📋 Notes</a>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <div class="list-header">
+        <div class="list-title">Animals · 42</div>
+        <button class="btn-primary">+ New</button>
+      </div>
+
+      <div class="toolbar">
+        <select><option>All statuses</option></select>
+        <select><option>All species</option></select>
+        <select><option>All farms</option></select>
+        <input type="search" placeholder="Search by tag…">
+      </div>
+
+      <table class="animals-table">
+        <thead>
+          <tr>
+            <th>Tag</th>
+            <th>Species</th>
+            <th>Weight</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>A102</td><td>Cattle</td><td>320 kg</td>
+            <td class="status status-active">● Active</td>
+          </tr>
+          <tr>
+            <td>A103</td><td>Cattle</td><td>290 kg</td>
+            <td class="status status-active">● Active</td>
+          </tr>
+          <tr>
+            <td>A104</td><td>Cattle</td><td>—</td>
+            <td class="status status-inactive">● Sold</td>
+          </tr>
+          <tr>
+            <td>A105</td><td>Cattle</td><td>310 kg</td>
+            <td class="status status-warning">● Withdrawal</td>
+          </tr>
+          <tr>
+            <td>A106</td><td>Cattle</td><td>—</td>
+            <td class="status status-danger">● Dead</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="animals-cards">
+        <div class="animal-card">
+          <div>
+            <div class="tag">🐄 A102 · Cattle</div>
+            <div class="meta">320 kg · Farm Norte</div>
+          </div>
+          <span class="status status-active">● Active</span>
+        </div>
+        <div class="animal-card">
+          <div>
+            <div class="tag">🐄 A103 · Cattle</div>
+            <div class="meta">290 kg · Farm Norte</div>
+          </div>
+          <span class="status status-active">● Active</span>
+        </div>
+        <div class="animal-card">
+          <div>
+            <div class="tag">🐄 A104 · Cattle</div>
+            <div class="meta">— · Farm Norte</div>
+          </div>
+          <span class="status status-inactive">● Sold</span>
+        </div>
+        <div class="animal-card">
+          <div>
+            <div class="tag">🐄 A105 · Cattle</div>
+            <div class="meta">310 kg · Farm Sur</div>
+          </div>
+          <span class="status status-warning">● Withdrawal</span>
+        </div>
+        <div class="animal-card">
+          <div>
+            <div class="tag">🐄 A106 · Cattle</div>
+            <div class="meta">— · Farm Sur</div>
+          </div>
+          <span class="status status-danger">● Dead</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animal Detail — Farm Management</title>
+<link rel="stylesheet" href="../tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: var(--font-size-base);
+    background: var(--bg);
+    color: var(--text-primary);
+  }
+
+  .icon { width: 1.1em; height: 1.1em; flex-shrink: 0; }
+
+  .shell { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 220px;
+    background: var(--accent-dark);
+    color: var(--bg);
+    padding: 24px 16px;
+    flex-shrink: 0;
+  }
+  .sidebar .brand { font-weight: 700; font-size: 1.1rem; margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+  .sidebar nav { display: flex; flex-direction: column; gap: 4px; }
+  .sidebar .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 8px; text-decoration: none;
+    color: var(--bg); opacity: 0.75; font-size: 0.95rem;
+  }
+  .sidebar .nav-item.active {
+    background: rgba(253, 246, 236, 0.15); opacity: 1; font-weight: 600;
+  }
+
+  .main { flex: 1; padding: 24px; max-width: 720px; }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    margin-bottom: 12px;
+  }
+
+  /* --- Header card: identity + status --- */
+  .header-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .header-card h2 { margin: 0 0 4px 0; font-size: 1.2rem; }
+
+  .header-meta {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .status-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .status-active { color: var(--status-active); background: rgba(124,144,112,0.12); }
+  .status-inactive { color: var(--status-inactive); background: rgba(176,137,104,0.12); }
+  .status-warning { color: var(--status-warning); background: rgba(201,162,39,0.12); }
+  .status-danger { color: var(--status-danger); background: rgba(181,83,60,0.12); }
+  .status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    margin-right: 6px;
+  }
+
+  .lineage {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 8px;
+  }
+  .lineage b { color: var(--text-primary); }
+
+  /* --- Tabs --- */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .tab {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    font-family: inherit;
+  }
+  .tab.active {
+    color: var(--accent-dark);
+    font-weight: 600;
+    border-bottom-color: var(--accent);
+  }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* --- Event list (weight/health/notes rows) --- */
+  .event-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .event-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+  }
+  .event-row:last-child { border-bottom: none; }
+  .event-date {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    min-width: 80px;
+  }
+  .event-main { flex: 1; padding: 0 12px; }
+  .event-value { font-weight: 600; }
+  .event-sub { font-size: 0.8rem; color: var(--text-secondary); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .panel-header h3 { margin: 0; font-size: 1rem; }
+
+  @media (max-width: 767px) {
+    .sidebar { display: none; }
+    .main { max-width: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.4 13.7A6.5 6.5 0 1 0 6.28 6.6c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c4 0 8.4-1.8 11.4-4.3"/><path d="m18.5 6 2.19 4.5a6.48 6.48 0 0 1-2.29 7.2C15.4 20.2 11 22 7 22a3 3 0 0 1-2.68-1.66L2.4 16.5"/><circle cx="12.5" cy="8.5" r="2.5"/></svg> Farm Mgmt</div>
+      <nav>
+        <a class="nav-item active" href="animals-list.html"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16.4 13.7A6.5 6.5 0 1 0 6.28 6.6c-1.1 3.13-.78 3.9-3.18 6.08A3 3 0 0 0 5 18c4 0 8.4-1.8 11.4-4.3"/><path d="m18.5 6 2.19 4.5a6.48 6.48 0 0 1-2.29 7.2C15.4 20.2 11 22 7 22a3 3 0 0 1-2.68-1.66L2.4 16.5"/><circle cx="12.5" cy="8.5" r="2.5"/></svg> Animals</a>
+        <a class="nav-item" href="farms-list.html"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 21V10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1v11"/><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 1.132-1.803l7.95-3.974a2 2 0 0 1 1.837 0l7.948 3.974A2 2 0 0 1 22 8z"/><path d="M6 13h12"/><path d="M6 17h12"/></svg> Farms</a>
+        <a class="nav-item" href="#"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9.5 8h5"/><path d="M9.5 12H16"/><path d="M9.5 16H14"/></svg> Notes</a>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <a class="back-link" href="animals-list.html"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg> Back to Animals</a>
+
+      <div class="header-card">
+        <div>
+          <h2>A102</h2>
+          <div class="header-meta">Cattle · Angus · Female · 2y 3m old · Farm Norte</div>
+          <div class="lineage">Sire: <b>B01</b> &nbsp;·&nbsp; Dam: <b>B02</b></div>
+        </div>
+        <span class="status-badge status-active"><span class="status-dot"></span>Active</span>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" onclick="showTab(event, 'overview')">Overview</button>
+        <button class="tab" onclick="showTab(event, 'weight')">Weight</button>
+        <button class="tab" onclick="showTab(event, 'health')">Health</button>
+        <button class="tab" onclick="showTab(event, 'notes')">Notes</button>
+      </div>
+
+      <div class="tab-panel active" id="tab-overview">
+        <div class="event-list">
+          <div class="event-row">
+            <div class="event-main"><div class="event-sub">Tenure</div><div class="event-value">Owned</div></div>
+          </div>
+          <div class="event-row">
+            <div class="event-main"><div class="event-sub">Primary tag</div><div class="event-value">A102</div></div>
+          </div>
+          <div class="event-row">
+            <div class="event-main"><div class="event-sub">Birth date</div><div class="event-value">2024-04-02</div></div>
+          </div>
+          <div class="event-row">
+            <div class="event-main"><div class="event-sub">Last weight</div><div class="event-value">320 kg (2026-06-01)</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-weight">
+        <div class="panel-header">
+          <h3>Weight history</h3>
+          <button class="btn-primary"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Log weight</button>
+        </div>
+        <div class="event-list">
+          <div class="event-row">
+            <div class="event-date">2026-06-01</div>
+            <div class="event-main event-value">320 kg</div>
+          </div>
+          <div class="event-row">
+            <div class="event-date">2026-05-01</div>
+            <div class="event-main event-value">305 kg</div>
+          </div>
+          <div class="event-row">
+            <div class="event-date">2026-04-01</div>
+            <div class="event-main event-value">288 kg</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-health">
+        <div class="panel-header">
+          <h3>Health events</h3>
+          <button class="btn-primary"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Log event</button>
+        </div>
+        <div class="event-list">
+          <div class="event-row">
+            <div class="event-date">2026-05-15</div>
+            <div class="event-main">
+              <div class="event-value">Vaccination — FMD</div>
+              <div class="event-sub">Withdrawal until 2026-05-29</div>
+            </div>
+          </div>
+          <div class="event-row">
+            <div class="event-date">2026-02-10</div>
+            <div class="event-main">
+              <div class="event-value">Deworming</div>
+              <div class="event-sub">No withdrawal period</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-notes">
+        <div class="panel-header">
+          <h3>Notes</h3>
+          <button class="btn-primary"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg> Add note</button>
+        </div>
+        <div class="event-list">
+          <div class="event-row">
+            <div class="event-main">
+              <div class="event-value">Slightly favoring left hind leg, monitor.</div>
+              <div class="event-sub">2026-06-10 · J. Pérez</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showTab(evt, name) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      evt.currentTarget.classList.add('active');
+      document.getElementById('tab-' + name).classList.add('active');
+    }
+  </script>
+</body>
+</html>

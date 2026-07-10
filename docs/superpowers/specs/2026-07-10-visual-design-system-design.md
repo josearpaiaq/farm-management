@@ -38,6 +38,15 @@ Typography: system sans-serif stack, sized for legibility outdoors (base body
 size larger than a typical desktop-first app). No custom font is committed to
 in this pass.
 
+**Icons: lucide-react, always.** Every icon in the product uses the
+`lucide-react` set (component library decision is still open — leaning
+shadcn/ui — but icons are settled regardless of that choice). Static HTML
+mockups embed the equivalent Lucide SVG inline (Lucide's SVGs are MIT-licensed
+and identical to what `lucide-react` renders), since mockups have no React
+build step; each inline `<svg>` is a 1:1 stand-in for a named Lucide component
+(e.g. the sidebar's Animals icon is `Beef` → `<Beef />` later). No emoji or
+other icon sets are used anywhere in the app.
+
 ## Navigation Shell
 
 - **Desktop:** fixed sidebar (icons + labels) on the left, always visible.

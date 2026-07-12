@@ -52,16 +52,19 @@ was written, so the database schema and API contract carry over unchanged.
 
 ## Contract & Repos
 
-Backend and frontend live in **separate repositories**.
+Backend and frontend live in a **single repository**, separated by top-level
+folders (`api/`, `web/`, `docs/`), and are **deployed independently**.
+(Originally planned as separate repositories; consolidated on 2026-07-12 —
+independent deploys don't require independent repos, and one repo is simpler.)
 
-Because the repos are separate, the API contract is shared via **OpenAPI**, not
-a shared TypeScript package: NestJS emits an OpenAPI document (code-first with
-`@nestjs/swagger`, using the hand-written `openapi.yaml` as the blueprint), and
-the frontend generates a typed client from it (`openapi-typescript` or `orval`).
-Both ends stay in sync through that generated client.
+The API contract is shared via **OpenAPI**, not a shared TypeScript package:
+NestJS emits an OpenAPI document (code-first with `@nestjs/swagger`, using the
+hand-written `openapi.yaml` as the blueprint), and the frontend generates a
+typed client from it (`openapi-typescript` or `orval`). Both ends stay in sync
+through that generated client.
 
-If full type/validation sharing (shared Zod schemas, shared domain logic) becomes
-worth the tooling overhead later, the path is to move to a monorepo (pnpm
+If full type/validation sharing (shared Zod schemas, shared domain logic)
+becomes worth the tooling overhead later, the path is workspace tooling (pnpm
 workspaces + Turborepo) with a `shared` package. This is intentionally deferred.
 
 ## Architecture

@@ -1,8 +1,8 @@
 {
   "name": "api",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Farm Management API",
+  "author": "Jose Arpaia",
   "private": true,
   "license": "UNLICENSED",
   "engines": {

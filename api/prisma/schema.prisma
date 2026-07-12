@@ -1,0 +1,282 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["partialIndexes"]
+  moduleFormat    = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model animal_identifiers {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String        @db.Uuid
+  animal_id       String        @db.Uuid
+  id_type         String
+  value           String
+  is_primary      Boolean       @default(false)
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
+  deleted_at      DateTime?     @db.Timestamptz(6)
+  animals         animals       @relation(fields: [animal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organizations   organizations @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([organization_id, id_type, value], map: "animal_identifiers_org_type_value_unique", where: raw("(deleted_at IS NULL)"))
+  @@unique([animal_id, is_primary], map: "animal_identifiers_one_primary_per_animal", where: raw("(is_primary AND (deleted_at IS NULL))"))
+  @@index([animal_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model animals {
+  id                                                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id                                    String               @db.Uuid
+  farm_id                                            String               @db.Uuid
+  species                                            String
+  sex                                                String
+  breed_id                                           String?              @db.Uuid
+  birth_date                                         DateTime?            @db.Date
+  tenure                                             String               @default("owned")
+  status                                             String               @default("active")
+  sire_id                                            String?              @db.Uuid
+  dam_id                                             String?              @db.Uuid
+  import_job_id                                      String?              @db.Uuid
+  created_at                                         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                                         DateTime             @default(now()) @db.Timestamptz(6)
+  deleted_at                                         DateTime?            @db.Timestamptz(6)
+  animal_identifiers                                 animal_identifiers[]
+  breeds                                             breeds?              @relation(fields: [breed_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  animals_animals_dam_idToanimals                    animals?             @relation("animals_dam_idToanimals", fields: [dam_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_animals_animals_dam_idToanimals              animals[]            @relation("animals_dam_idToanimals")
+  farms                                              farms                @relation(fields: [farm_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  import_jobs                                        import_jobs?         @relation(fields: [import_job_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organizations                                      organizations        @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  animals_animals_sire_idToanimals                   animals?             @relation("animals_sire_idToanimals", fields: [sire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_animals_animals_sire_idToanimals             animals[]            @relation("animals_sire_idToanimals")
+  breeding_events_breeding_events_animal_idToanimals breeding_events[]    @relation("breeding_events_animal_idToanimals")
+  breeding_events_breeding_events_sire_idToanimals   breeding_events[]    @relation("breeding_events_sire_idToanimals")
+  health_events                                      health_events[]
+  import_row_results                                 import_row_results[]
+  movements                                          movements[]
+  notes                                              notes[]
+  production_records                                 production_records[]
+  weight_records                                     weight_records[]
+
+  @@index([breed_id])
+  @@index([dam_id])
+  @@index([farm_id])
+  @@index([import_job_id])
+  @@index([organization_id, status])
+  @@index([sire_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model breeding_events {
+  id                                         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  animal_id                                  String    @db.Uuid
+  event_type                                 String
+  occurred_on                                DateTime  @db.Date
+  sire_id                                    String?   @db.Uuid
+  details                                    String?
+  created_at                                 DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                                 DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                                 DateTime? @db.Timestamptz(6)
+  animals_breeding_events_animal_idToanimals animals   @relation("breeding_events_animal_idToanimals", fields: [animal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  animals_breeding_events_sire_idToanimals   animals?  @relation("breeding_events_sire_idToanimals", fields: [sire_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([animal_id, occurred_on])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model breeds {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String        @db.Uuid
+  species         String
+  name            String
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
+  deleted_at      DateTime?     @db.Timestamptz(6)
+  animals         animals[]
+  organizations   organizations @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([organization_id, species, name])
+}
+
+model farms {
+  id                                      String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id                         String               @db.Uuid
+  name                                    String
+  location                                String?
+  created_at                              DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at                              DateTime             @default(now()) @db.Timestamptz(6)
+  deleted_at                              DateTime?            @db.Timestamptz(6)
+  animals                                 animals[]
+  organizations                           organizations        @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  movements_movements_from_farm_idTofarms movements[]          @relation("movements_from_farm_idTofarms")
+  movements_movements_to_farm_idTofarms   movements[]          @relation("movements_to_farm_idTofarms")
+  production_records                      production_records[]
+
+  @@index([organization_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model health_events {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  animal_id        String    @db.Uuid
+  event_type       String
+  occurred_on      DateTime  @db.Date
+  product          String?
+  description      String?
+  withdrawal_until DateTime? @db.Date
+  created_at       DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at       DateTime? @db.Timestamptz(6)
+  animals          animals   @relation(fields: [animal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([animal_id, occurred_on])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model import_jobs {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id    String               @db.Uuid
+  created_by         String?              @db.Uuid
+  filename           String
+  raw_file           Bytes
+  dry_run            Boolean
+  status             String               @default("processing")
+  total_rows         Int?
+  ok_rows            Int?
+  error_rows         Int?
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  animals            animals[]
+  users              users?               @relation(fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organizations      organizations        @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  import_row_results import_row_results[]
+
+  @@index([organization_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model import_row_results {
+  id            String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  import_job_id String      @db.Uuid
+  row_number    Int
+  status        String
+  message       String?
+  animal_id     String?     @db.Uuid
+  created_at    DateTime    @default(now()) @db.Timestamptz(6)
+  animals       animals?    @relation(fields: [animal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  import_jobs   import_jobs @relation(fields: [import_job_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([import_job_id, row_number])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model movements {
+  id                                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  animal_id                           String    @db.Uuid
+  from_farm_id                        String?   @db.Uuid
+  to_farm_id                          String?   @db.Uuid
+  moved_on                            DateTime  @db.Date
+  reason                              String?
+  created_at                          DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at                          DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at                          DateTime? @db.Timestamptz(6)
+  animals                             animals   @relation(fields: [animal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  farms_movements_from_farm_idTofarms farms?    @relation("movements_from_farm_idTofarms", fields: [from_farm_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  farms_movements_to_farm_idTofarms   farms?    @relation("movements_to_farm_idTofarms", fields: [to_farm_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([animal_id])
+  @@index([from_farm_id])
+  @@index([to_farm_id])
+}
+
+model notes {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  animal_id  String    @db.Uuid
+  body       String
+  created_at DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at DateTime? @db.Timestamptz(6)
+  animals    animals   @relation(fields: [animal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([animal_id])
+}
+
+model organizations {
+  id                 String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name               String
+  created_at         DateTime             @default(now()) @db.Timestamptz(6)
+  updated_at         DateTime             @default(now()) @db.Timestamptz(6)
+  animal_identifiers animal_identifiers[]
+  animals            animals[]
+  breeds             breeds[]
+  farms              farms[]
+  import_jobs        import_jobs[]
+  users              users[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model production_records {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  farm_id     String    @db.Uuid
+  animal_id   String?   @db.Uuid
+  milk_liters Decimal   @db.Decimal(8, 2)
+  recorded_on DateTime  @db.Date
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at  DateTime? @db.Timestamptz(6)
+  animals     animals?  @relation(fields: [animal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  farms       farms     @relation(fields: [farm_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([animal_id], where: raw("(animal_id IS NOT NULL)"))
+  @@index([farm_id, recorded_on])
+}
+
+model roles {
+  id    Int     @id @db.SmallInt
+  name  String  @unique
+  users users[]
+}
+
+model sessions {
+  sid    String   @id
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire])
+}
+
+/// This model contains an expression index which requires additional setup for migrations. Visit https://pris.ly/d/expression-indexes for more info.
+model users {
+  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization_id String        @db.Uuid
+  role_id         Int           @db.SmallInt
+  email           String
+  password_hash   String
+  full_name       String
+  created_at      DateTime      @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime      @default(now()) @db.Timestamptz(6)
+  import_jobs     import_jobs[]
+  organizations   organizations @relation(fields: [organization_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  roles           roles         @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([organization_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model weight_records {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  animal_id   String    @db.Uuid
+  weight_kg   Decimal   @db.Decimal(7, 2)
+  recorded_on DateTime  @db.Date
+  created_at  DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime  @default(now()) @db.Timestamptz(6)
+  deleted_at  DateTime? @db.Timestamptz(6)
+  animals     animals   @relation(fields: [animal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([animal_id, recorded_on])
+}

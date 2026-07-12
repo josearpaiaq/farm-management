@@ -1,0 +1,25 @@
+# Local development database. Credentials come from ./.env (not committed;
+# see .env.example). The authoritative schema (db/schema.sql) is applied
+# automatically on first boot of the volume; to re-apply from scratch:
+#   docker compose down -v && docker compose up -d
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: farm-management-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  db-data:

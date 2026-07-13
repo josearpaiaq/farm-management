@@ -2,7 +2,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { AnimalsModule } from './animals/animals.module';
 import { AuthModule } from './auth/auth.module';
+import { BreedsModule } from './breeds/breeds.module';
 import { FarmsModule } from './farms/farms.module';
 import { CsrfGuard } from './common/guards/csrf.guard';
 import { SessionAuthGuard } from './common/guards/session-auth.guard';
@@ -18,6 +20,8 @@ import { SessionPoolService } from './session/session-pool.service';
     PrismaModule,
     AuthModule,
     FarmsModule,
+    BreedsModule,
+    AnimalsModule,
   ],
   controllers: [HealthController],
   providers: [

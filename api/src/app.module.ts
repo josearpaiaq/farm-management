@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
+import { FarmsModule } from './farms/farms.module';
 import { CsrfGuard } from './common/guards/csrf.guard';
 import { SessionAuthGuard } from './common/guards/session-auth.guard';
 import { HealthController } from './health/health.controller';
@@ -16,6 +17,7 @@ import { SessionPoolService } from './session/session-pool.service';
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 5 }]),
     PrismaModule,
     AuthModule,
+    FarmsModule,
   ],
   controllers: [HealthController],
   providers: [

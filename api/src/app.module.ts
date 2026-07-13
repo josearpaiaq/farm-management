@@ -7,6 +7,7 @@ import { AnimalsModule } from './animals/animals.module';
 import { AuthModule } from './auth/auth.module';
 import { BreedsModule } from './breeds/breeds.module';
 import { FarmsModule } from './farms/farms.module';
+import { ImportsModule } from './imports/imports.module';
 import { CsrfGuard } from './common/guards/csrf.guard';
 import { SessionAuthGuard } from './common/guards/session-auth.guard';
 import { HealthController } from './health/health.controller';
@@ -24,6 +25,7 @@ import { SessionPoolService } from './session/session-pool.service';
     BreedsModule,
     AnimalsModule,
     AnimalRecordsModule,
+    ImportsModule,
   ],
   controllers: [HealthController],
   providers: [

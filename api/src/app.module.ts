@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { AnimalRecordsModule } from './animal-records/animal-records.module';
 import { AnimalsModule } from './animals/animals.module';
 import { AuthModule } from './auth/auth.module';
 import { BreedsModule } from './breeds/breeds.module';
@@ -22,6 +23,7 @@ import { SessionPoolService } from './session/session-pool.service';
     FarmsModule,
     BreedsModule,
     AnimalsModule,
+    AnimalRecordsModule,
   ],
   controllers: [HealthController],
   providers: [

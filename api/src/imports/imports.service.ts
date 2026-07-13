@@ -49,7 +49,7 @@ interface ParsedRow {
   weightDate?: Date;
 }
 
-interface RowResult {
+export interface RowResult {
   row_number: number;
   status: 'valid' | 'invalid' | 'imported' | 'skipped' | 'error';
   message: string | null;
@@ -89,7 +89,7 @@ export class ImportsService {
         organization_id: organizationId,
         created_by: userId,
         filename: file.originalname,
-        raw_file: file.buffer,
+        raw_file: new Uint8Array(file.buffer),
         dry_run: dryRun,
       },
     });

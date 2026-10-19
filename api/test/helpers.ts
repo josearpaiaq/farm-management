@@ -27,6 +27,7 @@ export async function createOrgWithOwner(
         type: argon2.argon2id,
       }),
       full_name: `E2E ${label}`,
+      email_verified_at: new Date(),
     },
   });
   return organization.id;

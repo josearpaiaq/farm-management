@@ -53,6 +53,7 @@ describe('Farms (e2e)', () => {
         email: `e2e-farms-${label}-${Date.now()}@test.local`.toLowerCase(),
         password_hash: await argon2.hash(password, { type: argon2.argon2id }),
         full_name: `E2E ${label}`,
+        email_verified_at: new Date(),
       },
     });
     return organization.id;

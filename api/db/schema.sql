@@ -44,12 +44,30 @@ CREATE TABLE users (
     email           text        NOT NULL,
     password_hash   text        NOT NULL,
     full_name       text        NOT NULL,
+    -- NULL until the user proves ownership of the email with a code.
+    email_verified_at timestamptz,
     created_at      timestamptz NOT NULL DEFAULT now(),
     updated_at      timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE UNIQUE INDEX users_email_unique ON users (lower(email));
 CREATE INDEX users_organization_id_idx ON users (organization_id);
+
+-- One-time codes sent by email (verification, passwordless login, password
+-- reset). Only an HMAC of the code is stored; codes are short-lived and
+-- lock after a few wrong attempts.
+CREATE TABLE email_codes (
+    id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    purpose     text        NOT NULL CHECK (purpose IN ('verify_email', 'login', 'reset_password')),
+    code_hash   text        NOT NULL,
+    attempts    smallint    NOT NULL DEFAULT 0,
+    expires_at  timestamptz NOT NULL,
+    consumed_at timestamptz,
+    created_at  timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX email_codes_user_purpose_idx ON email_codes (user_id, purpose);
 
 -- Server-side session store (connect-pg-simple layout).
 CREATE TABLE sessions (

@@ -40,6 +40,7 @@ describe('Auth (e2e)', () => {
         email,
         password_hash: await argon2.hash(password, { type: argon2.argon2id }),
         full_name: 'E2E Owner',
+        email_verified_at: new Date(),
       },
     });
   });

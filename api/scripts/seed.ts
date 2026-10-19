@@ -41,6 +41,7 @@ async function main(): Promise<void> {
         email,
         password_hash: await argon2.hash(password, { type: argon2.argon2id }),
         full_name: fullName,
+        email_verified_at: new Date(),
       },
     });
     console.log(`Seeded organization "${orgName}" with owner ${email}.`);

@@ -16,7 +16,8 @@ import { SessionPoolService } from './session/session-pool.service';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    // expandVariables resolves ${VAR} references, e.g. in DATABASE_URL.
+    ConfigModule.forRoot({ isGlobal: true, expandVariables: true }),
     // Base rate limit; only routes that opt in with ThrottlerGuard use it.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 5 }]),
     PrismaModule,

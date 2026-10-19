@@ -1,10 +1,14 @@
 // Seeds the initial organization and owner user from SEED_* env vars.
 // Idempotent: if the owner email already exists, it does nothing.
 // Run with: pnpm seed
-import 'dotenv/config';
+import { config } from 'dotenv';
+import { expand } from 'dotenv-expand';
 import { PrismaPg } from '@prisma/adapter-pg';
 import * as argon2 from 'argon2';
 import { PrismaClient } from '../src/generated/prisma/client';
+
+// Expand ${VAR} references so DATABASE_URL can be built from POSTGRES_*.
+expand(config());
 
 async function main(): Promise<void> {
   const email = (process.env.SEED_OWNER_EMAIL ?? '').toLowerCase();

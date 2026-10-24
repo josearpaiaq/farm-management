@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
+import { JwtModule } from '@nestjs/jwt';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AnimalRecordsModule } from './animal-records/animal-records.module';
 import { AnimalsModule } from './animals/animals.module';
@@ -8,16 +9,24 @@ import { AuthModule } from './auth/auth.module';
 import { BreedsModule } from './breeds/breeds.module';
 import { FarmsModule } from './farms/farms.module';
 import { ImportsModule } from './imports/imports.module';
-import { CsrfGuard } from './common/guards/csrf.guard';
-import { SessionAuthGuard } from './common/guards/session-auth.guard';
+import { ACCESS_TOKEN_TTL_SECONDS } from './auth/tokens.service';
+import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
-import { SessionPoolService } from './session/session-pool.service';
 
 @Module({
   imports: [
     // expandVariables resolves ${VAR} references, e.g. in DATABASE_URL.
     ConfigModule.forRoot({ isGlobal: true, expandVariables: true }),
+    // Access tokens: HS256 JWTs signed with AUTH_SECRET (see TokensService).
+    JwtModule.registerAsync({
+      global: true,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        secret: config.getOrThrow<string>('AUTH_SECRET'),
+        signOptions: { expiresIn: ACCESS_TOKEN_TTL_SECONDS },
+      }),
+    }),
     // Base rate limit; only routes that opt in with ThrottlerGuard use it.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 5 }]),
     PrismaModule,
@@ -29,10 +38,6 @@ import { SessionPoolService } from './session/session-pool.service';
     ImportsModule,
   ],
   controllers: [HealthController],
-  providers: [
-    SessionPoolService,
-    { provide: APP_GUARD, useClass: SessionAuthGuard },
-    { provide: APP_GUARD, useClass: CsrfGuard },
-  ],
+  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
 })
 export class AppModule {}

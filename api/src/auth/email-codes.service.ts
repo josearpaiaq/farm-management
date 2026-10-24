@@ -8,8 +8,8 @@ export type EmailCodePurpose = 'verify_email' | 'login' | 'reset_password';
 const CODE_TTL_MS = 10 * 60_000;
 const MAX_ATTEMPTS = 5;
 
-// Six-digit one-time codes delivered by email. Only an HMAC (keyed with the
-// session secret) is stored, a new code supersedes older ones for the same
+// Six-digit one-time codes delivered by email. Only an HMAC (keyed with
+// AUTH_SECRET) is stored, a new code supersedes older ones for the same
 // purpose, and a code locks after MAX_ATTEMPTS wrong guesses.
 @Injectable()
 export class EmailCodesService {
@@ -19,7 +19,7 @@ export class EmailCodesService {
     private readonly prisma: PrismaService,
     config: ConfigService,
   ) {
-    this.secret = config.getOrThrow<string>('SESSION_SECRET');
+    this.secret = config.getOrThrow<string>('AUTH_SECRET');
   }
 
   async issue(userId: string, purpose: EmailCodePurpose): Promise<string> {

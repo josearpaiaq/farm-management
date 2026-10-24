@@ -26,9 +26,7 @@ describe('Animal records (e2e)', () => {
   let prisma: PrismaService;
   const organizationIds: string[] = [];
   let agentA: TestAgent;
-  let csrfA: string;
   let agentB: TestAgent;
-  let csrfB: string;
   let animalId: string;
 
   beforeAll(async () => {
@@ -42,16 +40,8 @@ describe('Animal records (e2e)', () => {
 
     organizationIds.push(await createOrgWithOwner(prisma, 'records-A'));
     organizationIds.push(await createOrgWithOwner(prisma, 'records-B'));
-    ({ agent: agentA, csrf: csrfA } = await loginAgent(
-      app,
-      prisma,
-      organizationIds[0],
-    ));
-    ({ agent: agentB, csrf: csrfB } = await loginAgent(
-      app,
-      prisma,
-      organizationIds[1],
-    ));
+    ({ agent: agentA } = await loginAgent(app, prisma, organizationIds[0]));
+    ({ agent: agentB } = await loginAgent(app, prisma, organizationIds[1]));
 
     const farm = await prisma.farms.create({
       data: { organization_id: organizationIds[0], name: 'Finca Records' },
@@ -80,12 +70,10 @@ describe('Animal records (e2e)', () => {
   it('logs weights, lists them newest first, and soft-deletes mistakes', async () => {
     const first = await agentA
       .post(`/api/v1/animals/${animalId}/weights`)
-      .set('X-CSRF-Token', csrfA)
       .send({ weight_kg: 320.5, recorded_on: '2026-05-01' })
       .expect(201);
     await agentA
       .post(`/api/v1/animals/${animalId}/weights`)
-      .set('X-CSRF-Token', csrfA)
       .send({ weight_kg: 335, recorded_on: '2026-06-01' })
       .expect(201);
 
@@ -101,7 +89,6 @@ describe('Animal records (e2e)', () => {
     const firstId = (first.body as { id: string }).id;
     await agentA
       .delete(`/api/v1/animals/${animalId}/weights/${firstId}`)
-      .set('X-CSRF-Token', csrfA)
       .expect(204);
     const after = await agentA
       .get(`/api/v1/animals/${animalId}/weights`)
@@ -112,13 +99,11 @@ describe('Animal records (e2e)', () => {
   it('rejects invalid weights and future dates', async () => {
     await agentA
       .post(`/api/v1/animals/${animalId}/weights`)
-      .set('X-CSRF-Token', csrfA)
       .send({ weight_kg: -5, recorded_on: '2026-06-01' })
       .expect(422);
 
     const future = await agentA
       .post(`/api/v1/animals/${animalId}/weights`)
-      .set('X-CSRF-Token', csrfA)
       .send({ weight_kg: 300, recorded_on: '2030-01-01' })
       .expect(422);
     expect((future.body as ApiError).details).toEqual([
@@ -129,7 +114,6 @@ describe('Animal records (e2e)', () => {
   it('logs health events with withdrawal validation', async () => {
     await agentA
       .post(`/api/v1/animals/${animalId}/health-events`)
-      .set('X-CSRF-Token', csrfA)
       .send({
         event_type: 'vaccination',
         occurred_on: '2026-06-10',
@@ -141,7 +125,6 @@ describe('Animal records (e2e)', () => {
     // Withdrawal cannot end before the event happened.
     const invalid = await agentA
       .post(`/api/v1/animals/${animalId}/health-events`)
-      .set('X-CSRF-Token', csrfA)
       .send({
         event_type: 'treatment',
         occurred_on: '2026-06-10',
@@ -155,7 +138,6 @@ describe('Animal records (e2e)', () => {
     // Unknown event type.
     await agentA
       .post(`/api/v1/animals/${animalId}/health-events`)
-      .set('X-CSRF-Token', csrfA)
       .send({ event_type: 'exorcism', occurred_on: '2026-06-10' })
       .expect(422);
 
@@ -169,13 +151,11 @@ describe('Animal records (e2e)', () => {
   it('adds and lists notes', async () => {
     await agentA
       .post(`/api/v1/animals/${animalId}/notes`)
-      .set('X-CSRF-Token', csrfA)
       .send({ body: 'Cojea levemente de la pata trasera izquierda' })
       .expect(201);
 
     await agentA
       .post(`/api/v1/animals/${animalId}/notes`)
-      .set('X-CSRF-Token', csrfA)
       .send({ body: '' })
       .expect(422);
 
@@ -189,7 +169,6 @@ describe('Animal records (e2e)', () => {
     await agentB.get(`/api/v1/animals/${animalId}/weights`).expect(404);
     await agentB
       .post(`/api/v1/animals/${animalId}/weights`)
-      .set('X-CSRF-Token', csrfB)
       .send({ weight_kg: 100, recorded_on: '2026-06-01' })
       .expect(404);
   });

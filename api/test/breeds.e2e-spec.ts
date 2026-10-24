@@ -22,7 +22,6 @@ describe('Breeds (e2e)', () => {
   let prisma: PrismaService;
   const organizationIds: string[] = [];
   let agentA: TestAgent;
-  let csrfA: string;
   let agentB: TestAgent;
 
   beforeAll(async () => {
@@ -36,11 +35,7 @@ describe('Breeds (e2e)', () => {
 
     organizationIds.push(await createOrgWithOwner(prisma, 'breeds-A'));
     organizationIds.push(await createOrgWithOwner(prisma, 'breeds-B'));
-    ({ agent: agentA, csrf: csrfA } = await loginAgent(
-      app,
-      prisma,
-      organizationIds[0],
-    ));
+    ({ agent: agentA } = await loginAgent(app, prisma, organizationIds[0]));
     ({ agent: agentB } = await loginAgent(app, prisma, organizationIds[1]));
   });
 
@@ -56,7 +51,6 @@ describe('Breeds (e2e)', () => {
   it('rejects an unknown species with 422', async () => {
     await agentA
       .post('/api/v1/breeds')
-      .set('X-CSRF-Token', csrfA)
       .send({ species: 'dragon', name: 'Fire' })
       .expect(422);
   });
@@ -64,21 +58,18 @@ describe('Breeds (e2e)', () => {
   it('creates breeds, rejects duplicates per (species, name), and isolates per org', async () => {
     await agentA
       .post('/api/v1/breeds')
-      .set('X-CSRF-Token', csrfA)
       .send({ species: 'cattle', name: 'Brahman' })
       .expect(201);
 
     // Same name, same species: conflict.
     await agentA
       .post('/api/v1/breeds')
-      .set('X-CSRF-Token', csrfA)
       .send({ species: 'cattle', name: 'Brahman' })
       .expect(409);
 
     // Same name, different species: fine.
     await agentA
       .post('/api/v1/breeds')
-      .set('X-CSRF-Token', csrfA)
       .send({ species: 'goat', name: 'Brahman' })
       .expect(201);
 

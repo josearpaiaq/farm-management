@@ -10,7 +10,7 @@ import { PrismaService } from './../src/prisma/prisma.service';
 
 interface AuthResponse {
   user: { email: string; role: string; organization_id: string };
-  csrf_token: string;
+  access_token: string;
 }
 
 describe('Auth flows: register, email codes, password reset (e2e)', () => {
@@ -58,6 +58,10 @@ describe('Auth flows: register, email codes, password reset (e2e)', () => {
 
   const post = (path: string, body: object) =>
     request(app.getHttpServer()).post(`/api/v1/auth/${path}`).send(body);
+  const me = (accessToken: string) =>
+    request(app.getHttpServer())
+      .get('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${accessToken}`);
 
   it('rejects a weak registration with 422', () => {
     return post('register', {
@@ -92,18 +96,17 @@ describe('Auth flows: register, email codes, password reset (e2e)', () => {
     expect(lastCode(email, 'verify_email')).not.toBe(before);
   });
 
-  it('verifies the email with the code and starts a session', async () => {
+  it('verifies the email with the code and signs the user in', async () => {
     await post('verify-email', { email, code: '000000' }).expect(401);
 
-    const agent = request.agent(app.getHttpServer());
-    const response = await agent
-      .post('/api/v1/auth/verify-email')
-      .send({ email, code: lastCode(email, 'verify_email') })
-      .expect(200);
+    const response = await post('verify-email', {
+      email,
+      code: lastCode(email, 'verify_email'),
+    }).expect(200);
     const body = response.body as AuthResponse;
     expect(body.user.email).toBe(email);
     expect(body.user.role).toBe('owner');
-    await agent.get('/api/v1/auth/me').expect(200);
+    await me(body.access_token).expect(200);
 
     // Codes are single use.
     await post('verify-email', {
@@ -117,12 +120,11 @@ describe('Auth flows: register, email codes, password reset (e2e)', () => {
     await post('otp/request', { email: 'nobody@test.local' }).expect(204);
     await post('otp/request', { email }).expect(204);
 
-    const agent = request.agent(app.getHttpServer());
-    await agent
-      .post('/api/v1/auth/otp/verify')
-      .send({ email, code: lastCode(email, 'login') })
-      .expect(200);
-    await agent.get('/api/v1/auth/me').expect(200);
+    const response = await post('otp/verify', {
+      email,
+      code: lastCode(email, 'login'),
+    }).expect(200);
+    await me((response.body as AuthResponse).access_token).expect(200);
   });
 
   it('locks a code after too many wrong attempts', async () => {
@@ -140,12 +142,12 @@ describe('Auth flows: register, email codes, password reset (e2e)', () => {
     await post('otp/verify', { email, code }).expect(401);
   });
 
-  it('resets the password and revokes existing sessions', async () => {
-    const oldSession = request.agent(app.getHttpServer());
-    await oldSession
-      .post('/api/v1/auth/login')
-      .send({ email, password })
+  it('resets the password and revokes every refresh token', async () => {
+    const oldLogin = await post('login', { email, password })
+      .set('X-Auth-Transport', 'body')
       .expect(200);
+    const oldRefresh = (oldLogin.body as { refresh_token: string })
+      .refresh_token;
 
     await post('password/forgot', { email: 'nobody@test.local' }).expect(204);
     await post('password/forgot', { email }).expect(204);
@@ -155,7 +157,7 @@ describe('Auth flows: register, email codes, password reset (e2e)', () => {
       password: newPassword,
     }).expect(200);
 
-    await oldSession.get('/api/v1/auth/me').expect(401);
+    await post('refresh', { refresh_token: oldRefresh }).expect(401);
     await post('login', { email, password }).expect(401);
   });
 });

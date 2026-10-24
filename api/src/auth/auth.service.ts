@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EmailCodePurpose, EmailCodesService } from './email-codes.service';
 import { EmailService } from './email.service';
 import { RegisterDto } from './dto/register.dto';
+import { TokensService } from './tokens.service';
 
 type UserWithRole = Prisma.usersGetPayload<{ include: { roles: true } }>;
 
@@ -21,6 +22,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly emailCodes: EmailCodesService,
     private readonly email: EmailService,
+    private readonly tokens: TokensService,
   ) {}
 
   async validateUser(
@@ -123,20 +125,16 @@ export class AuthService {
         password_hash: await argon2.hash(password, { type: argon2.argon2id }),
       },
     });
-    await this.prisma
-      .$executeRaw`DELETE FROM sessions WHERE sess->>'userId' = ${user.id}`;
+    await this.tokens.revokeAllForUser(user.id);
   }
 
-  toAuthResponse(user: UserWithRole, csrfToken: string) {
+  toUserResponse(user: UserWithRole) {
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-        role: user.roles.name,
-        organization_id: user.organization_id,
-      },
-      csrf_token: csrfToken,
+      id: user.id,
+      email: user.email,
+      full_name: user.full_name,
+      role: user.roles.name,
+      organization_id: user.organization_id,
     };
   }
 }

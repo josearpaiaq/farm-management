@@ -33,23 +33,24 @@ export async function createOrgWithOwner(
   return organization.id;
 }
 
+// Logs in and returns an agent that sends the access token on every request.
 export async function loginAgent(
   app: INestApplication<App>,
   prisma: PrismaService,
   organizationId: string,
-): Promise<{ agent: TestAgent; csrf: string }> {
+): Promise<{ agent: TestAgent }> {
   const user = await prisma.users.findFirst({
     where: { organization_id: organizationId },
   });
-  const agent = request.agent(app.getHttpServer());
-  const response = await agent
+  const response = await request(app.getHttpServer())
     .post('/api/v1/auth/login')
     .send({ email: user!.email, password: TEST_PASSWORD })
     .expect(200);
-  return {
-    agent,
-    csrf: (response.body as { csrf_token: string }).csrf_token,
-  };
+  const { access_token } = response.body as { access_token: string };
+  const agent = request
+    .agent(app.getHttpServer())
+    .set('Authorization', `Bearer ${access_token}`);
+  return { agent };
 }
 
 // Hard-deletes everything the e2e suites created, in FK-safe order.
@@ -62,7 +63,7 @@ export async function cleanupOrgs(
   await prisma.animals.deleteMany({ where: inOrgs });
   await prisma.breeds.deleteMany({ where: inOrgs });
   await prisma.farms.deleteMany({ where: inOrgs });
-  await prisma.users.deleteMany({ where: inOrgs });
+  await prisma.users.deleteMany({ where: inOrgs }); // cascades refresh_tokens
   await prisma.organizations.deleteMany({
     where: { id: { in: organizationIds } },
   });

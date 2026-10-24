@@ -69,14 +69,22 @@ CREATE TABLE email_codes (
 
 CREATE INDEX email_codes_user_purpose_idx ON email_codes (user_id, purpose);
 
--- Server-side session store (connect-pg-simple layout).
-CREATE TABLE sessions (
-    sid    text         PRIMARY KEY,
-    sess   json         NOT NULL,
-    expire timestamp(6) NOT NULL
+-- Refresh tokens (opaque; only a SHA-256 hash is stored). Every refresh
+-- rotates the token: the old row is revoked and a new one is issued in the
+-- same family (one family per login). Presenting an already-revoked token
+-- signals theft, and the whole family is revoked.
+CREATE TABLE refresh_tokens (
+    id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id    uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    family_id  uuid        NOT NULL,
+    token_hash text        NOT NULL UNIQUE,
+    expires_at timestamptz NOT NULL,
+    revoked_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX sessions_expire_idx ON sessions (expire);
+CREATE INDEX refresh_tokens_user_id_idx ON refresh_tokens (user_id);
+CREATE INDEX refresh_tokens_family_id_idx ON refresh_tokens (family_id);
 
 -- ----------------------------------------------------------------------------
 -- Farms & catalogs

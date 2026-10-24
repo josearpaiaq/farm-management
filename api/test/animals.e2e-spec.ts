@@ -48,7 +48,6 @@ describe('Animals (e2e)', () => {
   let prisma: PrismaService;
   const organizationIds: string[] = [];
   let agentA: TestAgent;
-  let csrfA: string;
   let agentB: TestAgent;
 
   let farmA: string;
@@ -62,7 +61,6 @@ describe('Animals (e2e)', () => {
   ) {
     const response = await agentA
       .post('/api/v1/animals')
-      .set('X-CSRF-Token', csrfA)
       .send(payload)
       .expect(expected);
     return response.body as AnimalDetail & ApiError;
@@ -79,11 +77,7 @@ describe('Animals (e2e)', () => {
 
     organizationIds.push(await createOrgWithOwner(prisma, 'animals-A'));
     organizationIds.push(await createOrgWithOwner(prisma, 'animals-B'));
-    ({ agent: agentA, csrf: csrfA } = await loginAgent(
-      app,
-      prisma,
-      organizationIds[0],
-    ));
+    ({ agent: agentA } = await loginAgent(app, prisma, organizationIds[0]));
     ({ agent: agentB } = await loginAgent(app, prisma, organizationIds[1]));
 
     farmA = (
@@ -261,7 +255,6 @@ describe('Animals (e2e)', () => {
 
     const sold = await agentA
       .patch(`/api/v1/animals/${goat.id}`)
-      .set('X-CSRF-Token', csrfA)
       .send({ status: 'sold', tag: 'G-001-B' })
       .expect(200);
     expect((sold.body as AnimalDetail).status).toBe('sold');
@@ -284,10 +277,7 @@ describe('Animals (e2e)', () => {
       tag: 'TYPO-9',
     });
 
-    await agentA
-      .delete(`/api/v1/animals/${mistake.id}`)
-      .set('X-CSRF-Token', csrfA)
-      .expect(204);
+    await agentA.delete(`/api/v1/animals/${mistake.id}`).expect(204);
     await agentA.get(`/api/v1/animals/${mistake.id}`).expect(404);
 
     // Tag reusable after the erroneous record is gone.

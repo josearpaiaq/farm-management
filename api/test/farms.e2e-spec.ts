@@ -38,7 +38,6 @@ describe('Farms (e2e)', () => {
   const organizationIds: string[] = [];
 
   let agentA: TestAgent;
-  let csrfA: string;
   let agentB: TestAgent;
 
   async function createOrgWithOwner(label: string): Promise<string> {
@@ -61,19 +60,19 @@ describe('Farms (e2e)', () => {
 
   async function login(organizationId: string): Promise<{
     agent: TestAgent;
-    csrf: string;
   }> {
     const user = await prisma.users.findFirst({
       where: { organization_id: organizationId },
     });
-    const agent = request.agent(app.getHttpServer());
-    const response = await agent
+    const response = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: user!.email, password })
       .expect(200);
+    const { access_token } = response.body as { access_token: string };
     return {
-      agent,
-      csrf: (response.body as { csrf_token: string }).csrf_token,
+      agent: request
+        .agent(app.getHttpServer())
+        .set('Authorization', `Bearer ${access_token}`),
     };
   }
 
@@ -89,7 +88,7 @@ describe('Farms (e2e)', () => {
 
     const orgA = await createOrgWithOwner('A');
     await createOrgWithOwner('B');
-    ({ agent: agentA, csrf: csrfA } = await login(orgA));
+    ({ agent: agentA } = await login(orgA));
     ({ agent: agentB } = await login(organizationIds[1]));
   });
 
@@ -116,7 +115,6 @@ describe('Farms (e2e)', () => {
   it('rejects an empty name with field-level details', async () => {
     const response = await agentA
       .post('/api/v1/farms')
-      .set('X-CSRF-Token', csrfA)
       .send({ name: '' })
       .expect(422);
     const body = response.body as ApiError;
@@ -130,7 +128,6 @@ describe('Farms (e2e)', () => {
     // Create (server-generated id).
     const created = await agentA
       .post('/api/v1/farms')
-      .set('X-CSRF-Token', csrfA)
       .send({ name: 'La Esperanza', location: 'Km 12 vía al llano' })
       .expect(201);
     const farm = created.body as Farm;
@@ -140,12 +137,10 @@ describe('Farms (e2e)', () => {
     const clientId = randomUUID();
     await agentA
       .post('/api/v1/farms')
-      .set('X-CSRF-Token', csrfA)
       .send({ id: clientId, name: 'El Paraíso' })
       .expect(201);
     const duplicate = await agentA
       .post('/api/v1/farms')
-      .set('X-CSRF-Token', csrfA)
       .send({ id: clientId, name: 'El Paraíso' })
       .expect(409);
     expect((duplicate.body as ApiError).error).toBe('conflict');
@@ -159,14 +154,13 @@ describe('Farms (e2e)', () => {
     // Another organization cannot reach the farm by id.
     await agentB.get(`/api/v1/farms/${farm.id}`).expect(404);
 
-    // Mutations require the CSRF header.
-    await agentA
+    // Requests without an access token are rejected.
+    await request(app.getHttpServer())
       .patch(`/api/v1/farms/${farm.id}`)
       .send({ name: 'La Esperanza II' })
-      .expect(403);
+      .expect(401);
     const updated = await agentA
       .patch(`/api/v1/farms/${farm.id}`)
-      .set('X-CSRF-Token', csrfA)
       .send({ name: 'La Esperanza II' })
       .expect(200);
     expect((updated.body as Farm).name).toBe('La Esperanza II');
@@ -176,7 +170,6 @@ describe('Farms (e2e)', () => {
   it('refuses to delete a farm that still has animals', async () => {
     const created = await agentA
       .post('/api/v1/farms')
-      .set('X-CSRF-Token', csrfA)
       .send({ name: 'Potrero Norte' })
       .expect(201);
     const farm = created.body as Farm;
@@ -192,15 +185,11 @@ describe('Farms (e2e)', () => {
 
     const conflict = await agentA
       .delete(`/api/v1/farms/${farm.id}`)
-      .set('X-CSRF-Token', csrfA)
       .expect(409);
     expect((conflict.body as ApiError).error).toBe('conflict');
 
     await prisma.animals.delete({ where: { id: animal.id } });
-    await agentA
-      .delete(`/api/v1/farms/${farm.id}`)
-      .set('X-CSRF-Token', csrfA)
-      .expect(204);
+    await agentA.delete(`/api/v1/farms/${farm.id}`).expect(204);
     await agentA.get(`/api/v1/farms/${farm.id}`).expect(404);
   });
 });

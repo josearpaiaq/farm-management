@@ -5,11 +5,22 @@ import request from 'supertest';
 import { App } from 'supertest/types';
 import { AppModule } from './../src/app.module';
 import { configureApp } from './../src/app.setup';
+import { TokensService } from './../src/auth/tokens.service';
 import { PrismaService } from './../src/prisma/prisma.service';
 
 interface AuthResponse {
   user: { email: string; role: string };
-  csrf_token: string;
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  refresh_token?: string;
+}
+
+// Value of the refresh_token cookie in a response, or undefined.
+function refreshCookie(response: request.Response): string | undefined {
+  const cookies = ([] as string[]).concat(response.headers['set-cookie'] ?? []);
+  const cookie = cookies.find((c) => c.startsWith('refresh_token='));
+  return cookie?.split(';')[0].slice('refresh_token='.length) || undefined;
 }
 
 describe('Auth (e2e)', () => {
@@ -46,6 +57,7 @@ describe('Auth (e2e)', () => {
   });
 
   afterAll(async () => {
+    // Deleting the user cascades its refresh tokens.
     await prisma.users.deleteMany({
       where: { organization_id: organizationId },
     });
@@ -71,30 +83,118 @@ describe('Auth (e2e)', () => {
     return request(app.getHttpServer()).get('/api/v1/auth/me').expect(401);
   });
 
-  it('logs in, reads /me, enforces CSRF on logout, and logs out', async () => {
-    const agent = request.agent(app.getHttpServer());
+  const http = () => request(app.getHttpServer());
+  // Issues a fresh login (token family) directly, so these tests stay under
+  // the per-IP rate limit on POST /auth/login.
+  const issueRefresh = async () => {
+    const user = await prisma.users.findFirstOrThrow({ where: { email } });
+    return (await app.get(TokensService).issue(user)).refreshToken;
+  };
+  const me = (accessToken: string) =>
+    http().get('/api/v1/auth/me').set('Authorization', `Bearer ${accessToken}`);
 
-    const login = await agent
+  it('rejects a tampered access token', async () => {
+    await me('not-a-jwt').expect(401);
+  });
+
+  it('web login: access token in the body, refresh token in an httpOnly cookie', async () => {
+    const login = await http()
       .post('/api/v1/auth/login')
       .send({ email, password })
       .expect(200);
-    const loginBody = login.body as AuthResponse;
-    expect(loginBody.user.email).toBe(email);
-    expect(loginBody.user.role).toBe('owner');
-    expect(loginBody.csrf_token).toEqual(expect.any(String));
-    const csrfToken = loginBody.csrf_token;
+    const body = login.body as AuthResponse;
+    expect(body.user.email).toBe(email);
+    expect(body.user.role).toBe('owner');
+    expect(body.token_type).toBe('Bearer');
+    expect(body.expires_in).toBe(900);
+    expect(body.refresh_token).toBeUndefined();
 
-    const me = await agent.get('/api/v1/auth/me').expect(200);
-    expect((me.body as AuthResponse).user.email).toBe(email);
+    const setCookie = ([] as string[]).concat(login.headers['set-cookie']);
+    expect(setCookie[0]).toMatch(/HttpOnly/);
+    expect(setCookie[0]).toMatch(/SameSite=Strict/);
+    expect(setCookie[0]).toMatch(/Path=\/api\/v1\/auth/);
 
-    // Mutating request without the CSRF header must be rejected.
-    await agent.post('/api/v1/auth/logout').expect(403);
+    const meResponse = await me(body.access_token).expect(200);
+    expect((meResponse.body as AuthResponse).user.email).toBe(email);
+  });
 
-    await agent
+  it('refreshes from the cookie, rotating the refresh token', async () => {
+    const first = await issueRefresh();
+
+    const refreshed = await http()
+      .post('/api/v1/auth/refresh')
+      .set('Cookie', `refresh_token=${first}`)
+      .expect(200);
+    const second = refreshCookie(refreshed)!;
+    expect(second).toBeDefined();
+    expect(second).not.toBe(first);
+    await me((refreshed.body as AuthResponse).access_token).expect(200);
+  });
+
+  it('native clients get and send the refresh token in the body', async () => {
+    const login = await http()
+      .post('/api/v1/auth/login')
+      .set('X-Auth-Transport', 'body')
+      .send({ email, password })
+      .expect(200);
+    expect(refreshCookie(login)).toBeUndefined();
+    const { refresh_token } = login.body as AuthResponse;
+    expect(refresh_token).toEqual(expect.any(String));
+
+    const refreshed = await http()
+      .post('/api/v1/auth/refresh')
+      .set('X-Auth-Transport', 'body')
+      .send({ refresh_token })
+      .expect(200);
+    expect((refreshed.body as AuthResponse).refresh_token).not.toBe(
+      refresh_token,
+    );
+  });
+
+  it('revokes the whole family when a rotated token is reused', async () => {
+    const stolen = await issueRefresh();
+    const rotated = await http()
+      .post('/api/v1/auth/refresh')
+      .set('X-Auth-Transport', 'body')
+      .send({ refresh_token: stolen })
+      .expect(200);
+    const current = (rotated.body as AuthResponse).refresh_token!;
+
+    // Inside the grace window a reused token is only rejected (concurrent
+    // refresh from another tab), and the legitimate token keeps working.
+    await http()
+      .post('/api/v1/auth/refresh')
+      .send({ refresh_token: stolen })
+      .expect(401);
+
+    // Past the grace window, reuse means theft: the family is revoked.
+    await prisma.refresh_tokens.updateMany({
+      where: { revoked_at: { not: null }, users: { email } },
+      data: { revoked_at: new Date(Date.now() - 60_000) },
+    });
+    await http()
+      .post('/api/v1/auth/refresh')
+      .send({ refresh_token: stolen })
+      .expect(401);
+    await http()
+      .post('/api/v1/auth/refresh')
+      .send({ refresh_token: current })
+      .expect(401);
+  });
+
+  it('logout revokes the refresh token and clears the cookie', async () => {
+    const token = await issueRefresh();
+
+    const logout = await http()
       .post('/api/v1/auth/logout')
-      .set('X-CSRF-Token', csrfToken)
+      .set('Cookie', `refresh_token=${token}`)
       .expect(204);
-
-    await agent.get('/api/v1/auth/me').expect(401);
+    expect(([] as string[]).concat(logout.headers['set-cookie'])[0]).toMatch(
+      /refresh_token=;/,
+    );
+    await http()
+      .post('/api/v1/auth/refresh')
+      .set('Cookie', `refresh_token=${token}`)
+      .expect(401);
   });
 });

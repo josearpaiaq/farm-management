@@ -33,7 +33,6 @@ describe('CSV import (e2e)', () => {
   let prisma: PrismaService;
   const organizationIds: string[] = [];
   let agentA: TestAgent;
-  let csrfA: string;
   let agentB: TestAgent;
 
   // Spanish-Excel-style file: semicolons, DD/MM/YYYY, comma decimals.
@@ -49,15 +48,9 @@ describe('CSV import (e2e)', () => {
     'V-001;cattle;female;El Ñandú;;;;;',
   ].join('\r\n');
 
-  function upload(
-    agent: TestAgent,
-    csrf: string,
-    body: Buffer,
-    dryRun: boolean,
-  ) {
+  function upload(agent: TestAgent, body: Buffer, dryRun: boolean) {
     return agent
       .post(`/api/v1/imports/animals?dry_run=${dryRun}`)
-      .set('X-CSRF-Token', csrf)
       .attach('file', body, 'herd.csv');
   }
 
@@ -72,11 +65,7 @@ describe('CSV import (e2e)', () => {
 
     organizationIds.push(await createOrgWithOwner(prisma, 'imports-A'));
     organizationIds.push(await createOrgWithOwner(prisma, 'imports-B'));
-    ({ agent: agentA, csrf: csrfA } = await loginAgent(
-      app,
-      prisma,
-      organizationIds[0],
-    ));
+    ({ agent: agentA } = await loginAgent(app, prisma, organizationIds[0]));
     ({ agent: agentB } = await loginAgent(app, prisma, organizationIds[1]));
 
     await prisma.farms.create({
@@ -117,7 +106,7 @@ describe('CSV import (e2e)', () => {
   it('dry run validates every row and writes nothing', async () => {
     // latin1 encoding, as a Spanish Windows Excel would produce ("Ñandú").
     const body = Buffer.from(csvContent, 'latin1');
-    const response = await upload(agentA, csrfA, body, true).expect(201);
+    const response = await upload(agentA, body, true).expect(201);
     const result = response.body as ImportResponse;
 
     expect(result.job.status).toBe('completed');
@@ -146,7 +135,7 @@ describe('CSV import (e2e)', () => {
 
   it('commit imports valid rows and re-uploading skips them (idempotent)', async () => {
     const body = Buffer.from(csvContent, 'latin1');
-    const first = await upload(agentA, csrfA, body, false).expect(201);
+    const first = await upload(agentA, body, false).expect(201);
     const firstResult = first.body as ImportResponse;
     expect(firstResult.summary).toEqual({
       total: 6,
@@ -170,7 +159,7 @@ describe('CSV import (e2e)', () => {
     expect(Number(animal!.weight_records[0].weight_kg)).toBe(350.5);
 
     // Re-uploading the same file never duplicates.
-    const second = await upload(agentA, csrfA, body, false).expect(201);
+    const second = await upload(agentA, body, false).expect(201);
     expect((second.body as ImportResponse).summary).toEqual({
       total: 6,
       imported: 0,
@@ -202,7 +191,7 @@ describe('CSV import (e2e)', () => {
 
   it('rejects a file without the required columns', async () => {
     const body = Buffer.from('nombre;raza\nLola;Brahman\n', 'utf8');
-    const response = await upload(agentA, csrfA, body, true).expect(422);
+    const response = await upload(agentA, body, true).expect(422);
     expect(JSON.stringify(response.body)).toContain('Missing required columns');
   });
 });

@@ -15,8 +15,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
-  reportUrl,
-  TEMPLATE_URL,
+  downloadReport,
+  downloadTemplate,
   useImportAnimals,
   useImportJobs,
 } from '@/features/imports/api';
@@ -24,6 +24,8 @@ import type { ImportResponse, ImportRowStatus } from '@/lib/api/types';
 import { formatDate } from '@/lib/format';
 import { errorMessage } from '@/lib/form';
 import { cn } from '@/lib/utils';
+
+const downloadFailed = (error: unknown) => toast.error(errorMessage(error));
 
 const ROW_STATUS_CLASSES: Record<ImportRowStatus, string> = {
   valid: 'text-status-active',
@@ -109,10 +111,11 @@ export default function ImportsPage() {
   return (
     <>
       <PageHeader title={t('nav.imports')}>
-        <Button variant="outline" asChild>
-          <a href={TEMPLATE_URL} download>
-            <Download className="size-4" /> {t('imports.template')}
-          </a>
+        <Button
+          variant="outline"
+          onClick={() => void downloadTemplate().catch(downloadFailed)}
+        >
+          <Download className="size-4" /> {t('imports.template')}
         </Button>
       </PageHeader>
 
@@ -194,10 +197,14 @@ export default function ImportsPage() {
                   })}
                 </p>
               </div>
-              <Button variant="ghost" size="sm" asChild>
-                <a href={reportUrl(job.id)} download>
-                  <Download className="size-4" /> {t('imports.report')}
-                </a>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  void downloadReport(job.id).catch(downloadFailed)
+                }
+              >
+                <Download className="size-4" /> {t('imports.report')}
               </Button>
             </CardContent>
           </Card>

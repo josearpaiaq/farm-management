@@ -1,12 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, API_BASE } from '@/lib/api/client';
+import { api, download } from '@/lib/api/client';
 import type { ImportJob, ImportResponse, Paginated } from '@/lib/api/types';
 
-export const TEMPLATE_URL = `${API_BASE}/imports/animals/template`;
+export const downloadTemplate = () =>
+  download('/imports/animals/template', 'animals-template.csv');
 
-export function reportUrl(jobId: string): string {
-  return `${API_BASE}/imports/${jobId}/report`;
-}
+export const downloadReport = (jobId: string) =>
+  download(`/imports/${jobId}/report`, 'import-report.csv');
 
 export function useImportJobs(query: { offset?: number } = {}) {
   return useQuery({

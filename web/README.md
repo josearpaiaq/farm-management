@@ -12,8 +12,9 @@ sidebar becomes a drawer, tables become cards).
   light palette) in `src/index.css`
 - TanStack Query for server state; nuqs for URL-synced list filters
 - react-router-dom, react-hook-form, i18next (Spanish shipped first)
-- Hand-written typed API client in `src/lib/api/` (session cookie +
-  `x-csrf-token` header, normalized error shape). Generating the client from
+- Hand-written typed API client in `src/lib/api/` (bearer access token kept
+  in memory, transparent refresh from the httpOnly refresh cookie on 401,
+  normalized error shape). Generating the client from
   the API's OpenAPI document is planned once the API declares response DTOs.
 
 ## Development
@@ -28,7 +29,7 @@ pnpm build      # typecheck + production build into dist/
 ```
 
 The dev server proxies `/api` to `http://localhost:3000` (see
-`vite.config.ts`), so the session cookie works same-origin. If your API runs
+`vite.config.ts`), so the refresh token cookie works same-origin. If your API runs
 on another port, set `API_PROXY_TARGET` in a local `web/.env` (gitignored).
 Log in with the user seeded by `pnpm seed` in `../api`.
 

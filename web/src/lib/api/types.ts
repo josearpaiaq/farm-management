@@ -55,7 +55,9 @@ export interface AuthUser {
 
 export interface AuthResponse {
   user: AuthUser;
-  csrf_token: string;
+  access_token: string;
+  token_type: 'Bearer';
+  expires_in: number;
 }
 
 export interface Farm {

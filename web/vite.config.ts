@@ -13,9 +13,9 @@ export default defineConfig(({ mode }) => {
         "@": path.resolve(__dirname, "./src"),
       },
     },
-    // Same-origin API in dev so the session cookie (sameSite=lax) just works.
-    // If your API listens on a non-default port, set API_PROXY_TARGET in a
-    // local web/.env (gitignored).
+    // Same-origin API in dev so the refresh token cookie (sameSite=strict,
+    // path /api/v1/auth) just works. If your API listens on a non-default
+    // port, set API_PROXY_TARGET in a local web/.env (gitignored).
     server: {
       proxy: {
         "/api": env.API_PROXY_TARGET || "http://localhost:3000",

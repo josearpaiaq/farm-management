@@ -26,7 +26,11 @@ and its PostgreSQL database.
 pnpm install
 pnpm dev        # http://localhost:5173
 pnpm build      # typecheck + production build into dist/
+pnpm test       # Vitest + Testing Library, API mocked with MSW
 ```
+
+Tests live next to the code (`*.test.ts(x)`); shared setup, the MSW server
+and a router-aware render helper are in `src/test/`.
 
 The dev server proxies `/api` to `http://localhost:3000` (see
 `vite.config.ts`), so the refresh token cookie works same-origin. If your API runs

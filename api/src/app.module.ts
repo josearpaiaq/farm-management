@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtModule } from '@nestjs/jwt';
+import { ServeStaticModule } from '@nestjs/serve-static';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AnimalRecordsModule } from './animal-records/animal-records.module';
 import { AnimalsModule } from './animals/animals.module';
@@ -36,6 +37,17 @@ import { PrismaModule } from './prisma/prisma.module';
     AnimalsModule,
     AnimalRecordsModule,
     ImportsModule,
+    // Production: serve the built web app from the same origin (so the
+    // sameSite=strict refresh cookie works), falling back to index.html for
+    // client-side routes. Unset in dev, where Vite serves the web.
+    ...(process.env.WEB_DIST_DIR
+      ? [
+          ServeStaticModule.forRoot({
+            rootPath: process.env.WEB_DIST_DIR,
+            exclude: ['/api/{*path}'],
+          }),
+        ]
+      : []),
   ],
   controllers: [HealthController],
   providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],

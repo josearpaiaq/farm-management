@@ -67,4 +67,17 @@ describe('LoginPage', () => {
       `/verify-email?email=${encodeURIComponent(testUser.email)}`,
     );
   });
+
+  it('toggles password visibility', async () => {
+    const user = userEvent.setup();
+    renderAt('/login', <LoginPage />);
+    const input = await screen.findByLabelText('Contraseña');
+    expect(input).toHaveAttribute('type', 'password');
+
+    await user.click(screen.getByRole('button', { name: 'Mostrar contraseña' }));
+    expect(input).toHaveAttribute('type', 'text');
+
+    await user.click(screen.getByRole('button', { name: 'Ocultar contraseña' }));
+    expect(input).toHaveAttribute('type', 'password');
+  });
 });

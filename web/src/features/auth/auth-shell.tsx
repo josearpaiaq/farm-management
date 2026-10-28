@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
+import { PasswordInput } from '@/components/password-input';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -39,16 +40,22 @@ export function AuthField({
   id,
   label,
   error,
+  type,
   ...inputProps
 }: ComponentProps<typeof Input> & {
   id: string;
   label: string;
   error?: string;
 }) {
+  const field = { id, 'aria-invalid': !!error, ...inputProps };
   return (
     <div className="space-y-2">
       <Label htmlFor={id}>{label}</Label>
-      <Input id={id} aria-invalid={!!error} {...inputProps} />
+      {type === 'password' ? (
+        <PasswordInput {...field} />
+      ) : (
+        <Input type={type} {...field} />
+      )}
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );

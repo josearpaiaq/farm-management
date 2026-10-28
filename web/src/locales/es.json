@@ -6,6 +6,8 @@
     "subtitle": "Inicia sesión para administrar tu ganado",
     "email": "Correo electrónico",
     "password": "Contraseña",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
     "login": "Iniciar sesión",
     "logout": "Cerrar sesión",
     "loginWithCode": "Entrar con un código por correo",

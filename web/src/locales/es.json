@@ -1,0 +1,208 @@
+{
+  "app": {
+    "title": "Gestión de fincas"
+  },
+  "auth": {
+    "subtitle": "Inicia sesión para administrar tu ganado",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "showPassword": "Mostrar contraseña",
+    "hidePassword": "Ocultar contraseña",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "loginWithCode": "Entrar con un código por correo",
+    "loginWithCodeSubtitle": "Te enviaremos un código para entrar sin contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "forgotSubtitle": "Te enviaremos un código para crear una contraseña nueva",
+    "noAccount": "¿No tienes cuenta? Regístrate",
+    "haveAccount": "¿Ya tienes cuenta? Inicia sesión",
+    "backToLogin": "Volver a iniciar sesión",
+    "register": "Crear cuenta",
+    "registerSubtitle": "Crea tu cuenta y la de tu finca",
+    "fullName": "Nombre completo",
+    "organizationName": "Nombre de la finca o empresa",
+    "passwordMin": "Mínimo 8 caracteres",
+    "emailTaken": "Ya existe una cuenta con este correo",
+    "code": "Código",
+    "codeFormat": "El código tiene 6 dígitos",
+    "codeSentTo": "Enviamos un código a {{email}}",
+    "invalidCode": "Código incorrecto o vencido",
+    "sendCode": "Enviar código",
+    "resendCode": "Reenviar código",
+    "codeResent": "Código reenviado",
+    "verify": "Verificar",
+    "newPassword": "Nueva contraseña",
+    "resetPassword": "Cambiar contraseña"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "animals": "Animales",
+    "farms": "Fincas",
+    "breeds": "Razas",
+    "imports": "Importar",
+    "menu": "Abrir menú"
+  },
+  "common": {
+    "loading": "Cargando…",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "select": "Seleccionar",
+    "none": "Ninguno",
+    "back": "Volver",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "pageRange": "{{from}}–{{to}} de {{total}}"
+  },
+  "validation": {
+    "required": "Este campo es obligatorio"
+  },
+  "errors": {
+    "network": "No se pudo conectar con el servidor",
+    "unauthorized": "Credenciales inválidas o sesión vencida",
+    "forbidden": "No tienes permiso para hacer esto",
+    "not_found": "No se encontró el registro",
+    "conflict": "Ya existe un registro en conflicto con este cambio",
+    "validation_error": "Revisa los campos marcados",
+    "too_many_requests": "Demasiados intentos, espera un momento",
+    "bad_request": "La solicitud no es válida",
+    "internal_error": "Ocurrió un error inesperado, intenta de nuevo"
+  },
+  "vocab": {
+    "species": {
+      "cattle": "Bovino",
+      "sheep": "Ovino",
+      "goat": "Caprino",
+      "pig": "Porcino",
+      "horse": "Equino",
+      "other": "Otro"
+    },
+    "sex": {
+      "male": "Macho",
+      "female": "Hembra"
+    },
+    "tenure": {
+      "owned": "Propio",
+      "leased": "Arrendado"
+    },
+    "status": {
+      "active": "Activo",
+      "sold": "Vendido",
+      "dead": "Muerto",
+      "culled": "Descartado",
+      "transferred": "Transferido"
+    },
+    "healthEvent": {
+      "vaccination": "Vacunación",
+      "treatment": "Tratamiento",
+      "deworming": "Desparasitación",
+      "illness": "Enfermedad",
+      "checkup": "Revisión",
+      "other": "Otro"
+    }
+  },
+  "dashboard": {
+    "totalAnimals": "Animales en el hato",
+    "byStatus": "Por estado",
+    "bySpecies": "Por especie",
+    "noAnimals": "Aún no hay animales registrados"
+  },
+  "animals": {
+    "new": "Nuevo animal",
+    "newTitle": "Registrar animal",
+    "editTitle": "Editar {{tag}}",
+    "created": "Animal registrado",
+    "updated": "Cambios guardados",
+    "deleted": "Animal eliminado",
+    "deleteTitle": "Eliminar animal",
+    "deleteDescription": "Se eliminará el animal {{tag}} y sus identificadores. Esta acción es solo para registros creados por error: si el animal salió del hato, cambia su estado (vendido, muerto…).",
+    "empty": "No hay animales con estos filtros",
+    "noTag": "Sin arete",
+    "tag": "Arete",
+    "species": "Especie",
+    "sex": "Sexo",
+    "age": "Edad",
+    "farm": "Finca",
+    "breed": "Raza",
+    "birthDate": "Fecha de nacimiento",
+    "tenure": "Tenencia",
+    "status": "Estado",
+    "sire": "Padre",
+    "dam": "Madre",
+    "viewParent": "Ver ficha",
+    "allStatuses": "Todos los estados",
+    "allSpecies": "Todas las especies",
+    "allSexes": "Macho y hembra",
+    "allFarms": "Todas las fincas"
+  },
+  "records": {
+    "weights": "Pesos",
+    "health": "Salud",
+    "notes": "Notas",
+    "weightKg": "Peso (kg)",
+    "date": "Fecha",
+    "addWeight": "Registrar peso",
+    "weightAdded": "Peso registrado",
+    "noWeights": "Sin pesajes todavía",
+    "eventType": "Tipo de evento",
+    "product": "Producto",
+    "description": "Descripción",
+    "withdrawalUntil": "Retiro hasta",
+    "withdrawalNotice": "Retiro hasta el {{date}}",
+    "addHealth": "Registrar evento",
+    "healthAdded": "Evento registrado",
+    "noHealth": "Sin eventos de salud todavía",
+    "newNote": "Nueva nota",
+    "addNote": "Agregar nota",
+    "noteAdded": "Nota agregada",
+    "noNotes": "Sin notas todavía"
+  },
+  "farms": {
+    "new": "Nueva finca",
+    "newTitle": "Nueva finca",
+    "editTitle": "Editar finca",
+    "name": "Nombre",
+    "location": "Ubicación",
+    "noLocation": "Sin ubicación",
+    "empty": "Aún no hay fincas registradas",
+    "created": "Finca creada",
+    "updated": "Cambios guardados",
+    "deleted": "Finca eliminada",
+    "deleteTitle": "Eliminar finca",
+    "deleteDescription": "Se eliminará la finca {{name}}. Si tiene animales asignados, primero muévelos a otra finca."
+  },
+  "breeds": {
+    "new": "Nueva raza",
+    "newTitle": "Nueva raza",
+    "species": "Especie",
+    "name": "Nombre",
+    "allSpecies": "Todas las especies",
+    "empty": "Aún no hay razas en el catálogo",
+    "created": "Raza creada"
+  },
+  "imports": {
+    "template": "Descargar plantilla",
+    "uploadTitle": "Importar animales desde CSV",
+    "uploadHelp": "Sube el archivo CSV con tu hato (usa la plantilla como formato). Primero valida: verás un reporte fila por fila sin guardar nada. Luego importa las filas válidas; los aretes que ya existen se omiten, así que puedes corregir y volver a subir el mismo archivo sin duplicar.",
+    "file": "Archivo CSV",
+    "validate": "Validar (sin guardar)",
+    "commit": "Importar filas válidas",
+    "committed": "Importación completada",
+    "dryRunSummary": "{{total}} filas: {{ok}} válidas, {{skipped}} omitidas, {{errors}} con errores",
+    "commitSummary": "{{total}} filas: {{ok}} importadas, {{skipped}} omitidas, {{errors}} con errores",
+    "row": "Fila {{number}}:",
+    "rowStatus": {
+      "valid": "válida",
+      "invalid": "inválida",
+      "imported": "importada",
+      "skipped": "omitida",
+      "error": "error"
+    },
+    "history": "Historial de importaciones",
+    "noJobs": "Aún no hay importaciones",
+    "dryRun": "validación",
+    "jobCounts": "{{ok}} correctas · {{errors}} con errores",
+    "report": "Reporte"
+  }
+}

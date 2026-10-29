@@ -44,6 +44,8 @@ CREATE TABLE users (
     email           text        NOT NULL,
     password_hash   text        NOT NULL,
     full_name       text        NOT NULL,
+    -- NULL until the user proves ownership of the email with a code.
+    email_verified_at timestamptz,
     created_at      timestamptz NOT NULL DEFAULT now(),
     updated_at      timestamptz NOT NULL DEFAULT now()
 );
@@ -51,14 +53,38 @@ CREATE TABLE users (
 CREATE UNIQUE INDEX users_email_unique ON users (lower(email));
 CREATE INDEX users_organization_id_idx ON users (organization_id);
 
--- Server-side session store (connect-pg-simple layout).
-CREATE TABLE sessions (
-    sid    text         PRIMARY KEY,
-    sess   json         NOT NULL,
-    expire timestamp(6) NOT NULL
+-- One-time codes sent by email (verification, passwordless login, password
+-- reset). Only an HMAC of the code is stored; codes are short-lived and
+-- lock after a few wrong attempts.
+CREATE TABLE email_codes (
+    id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id     uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    purpose     text        NOT NULL CHECK (purpose IN ('verify_email', 'login', 'reset_password')),
+    code_hash   text        NOT NULL,
+    attempts    smallint    NOT NULL DEFAULT 0,
+    expires_at  timestamptz NOT NULL,
+    consumed_at timestamptz,
+    created_at  timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX sessions_expire_idx ON sessions (expire);
+CREATE INDEX email_codes_user_purpose_idx ON email_codes (user_id, purpose);
+
+-- Refresh tokens (opaque; only a SHA-256 hash is stored). Every refresh
+-- rotates the token: the old row is revoked and a new one is issued in the
+-- same family (one family per login). Presenting an already-revoked token
+-- signals theft, and the whole family is revoked.
+CREATE TABLE refresh_tokens (
+    id         uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id    uuid        NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    family_id  uuid        NOT NULL,
+    token_hash text        NOT NULL UNIQUE,
+    expires_at timestamptz NOT NULL,
+    revoked_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX refresh_tokens_user_id_idx ON refresh_tokens (user_id);
+CREATE INDEX refresh_tokens_family_id_idx ON refresh_tokens (family_id);
 
 -- ----------------------------------------------------------------------------
 -- Farms & catalogs

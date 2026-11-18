@@ -14,6 +14,7 @@ import AnimalDetailPage from '@/features/animals/animal-detail-page'
 import FarmsPage from '@/features/farms/farms-page'
 import BreedsPage from '@/features/breeds/breeds-page'
 import ImportsPage from '@/features/imports/imports-page'
+import MembersPage from '@/features/members/members-page'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: 'farms', element: <FarmsPage /> },
       { path: 'breeds', element: <BreedsPage /> },
       { path: 'imports', element: <ImportsPage /> },
+      { path: 'members', element: <MembersPage /> },
     ],
   },
 ])

@@ -10,6 +10,7 @@ import { AuthModule } from './auth/auth.module';
 import { BreedsModule } from './breeds/breeds.module';
 import { FarmsModule } from './farms/farms.module';
 import { ImportsModule } from './imports/imports.module';
+import { MembersModule } from './members/members.module';
 import { ACCESS_TOKEN_TTL_SECONDS } from './auth/tokens.service';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { HealthController } from './health/health.controller';
@@ -37,6 +38,7 @@ import { PrismaModule } from './prisma/prisma.module';
     AnimalsModule,
     AnimalRecordsModule,
     ImportsModule,
+    MembersModule,
     // Production: serve the built web app from the same origin (so the
     // sameSite=strict refresh cookie works), falling back to index.html for
     // client-side routes. Unset in dev, where Vite serves the web.

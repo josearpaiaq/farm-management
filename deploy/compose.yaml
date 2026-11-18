@@ -9,6 +9,8 @@ services:
     environment:
       # One proxy hop (Caddy) in front of the app.
       TRUST_PROXY: 1
+      # Links in emails point at the public site.
+      APP_URL: https://${DOMAIN}
     restart: unless-stopped
 
   caddy:

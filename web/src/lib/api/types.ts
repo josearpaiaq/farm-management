@@ -53,6 +53,16 @@ export interface AuthUser {
   organization_id: string;
 }
 
+export interface Member {
+  id: string;
+  email: string;
+  full_name: string;
+  role: 'owner' | 'member';
+  // 'invited' until their first sign-in with an emailed code.
+  status: 'active' | 'invited';
+  created_at: string;
+}
+
 export interface AuthResponse {
   user: AuthUser;
   access_token: string;

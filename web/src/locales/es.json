@@ -40,6 +40,7 @@
     "farms": "Fincas",
     "breeds": "Razas",
     "imports": "Importar",
+    "members": "Miembros",
     "menu": "Abrir menú"
   },
   "common": {
@@ -171,6 +172,29 @@
     "deleted": "Finca eliminada",
     "deleteTitle": "Eliminar finca",
     "deleteDescription": "Se eliminará la finca {{name}}. Si tiene animales asignados, primero muévelos a otra finca."
+  },
+  "members": {
+    "invite": "Invitar",
+    "inviteTitle": "Invitar a la finca",
+    "inviteHelp": "Le llegará un correo. Para entrar, abre la app, toca \"Entrar con código\" y escribe su correo.",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "send": "Enviar invitación",
+    "invited": "Invitación enviada a {{email}}",
+    "emailTaken": "Ese correo ya tiene una cuenta en la app",
+    "you": "Tú",
+    "role": {
+      "owner": "Dueño",
+      "member": "Miembro"
+    },
+    "status": {
+      "invited": "Invitación pendiente"
+    },
+    "ownerOnly": "Solo el dueño puede invitar o quitar personas.",
+    "remove": "Quitar",
+    "removeTitle": "Quitar de la finca",
+    "removeDescription": "{{name}} ya no podrá entrar a la app ni ver los datos de la finca. Lo que registró se conserva.",
+    "removed": "Persona quitada"
   },
   "breeds": {
     "new": "Nueva raza",

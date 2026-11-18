@@ -7,6 +7,7 @@ import {
   PawPrint,
   Tractor,
   Upload,
+  Users,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { to: '/farms', key: 'nav.farms', icon: Tractor },
   { to: '/breeds', key: 'nav.breeds', icon: Dna },
   { to: '/imports', key: 'nav.imports', icon: Upload },
+  { to: '/members', key: 'nav.members', icon: Users },
 ] as const;
 
 function Nav({ onNavigate }: { onNavigate?: () => void }) {

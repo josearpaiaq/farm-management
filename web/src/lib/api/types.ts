@@ -53,11 +53,16 @@ export interface AuthUser {
   organization_id: string;
 }
 
+// Roles the owner can give to other people: editor adds and edits, viewer
+// only reads (see the API's PermissionsGuard).
+export const MEMBER_ROLES = ['viewer', 'editor'] as const;
+export type MemberRole = (typeof MEMBER_ROLES)[number];
+
 export interface Member {
   id: string;
   email: string;
   full_name: string;
-  role: 'owner' | 'member';
+  role: 'owner' | MemberRole;
   // 'invited' until their first sign-in with an emailed code.
   status: 'active' | 'invited';
   created_at: string;

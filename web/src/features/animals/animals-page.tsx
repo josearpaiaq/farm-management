@@ -30,6 +30,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useAnimals } from '@/features/animals/api';
+import { usePermissions } from '@/features/auth/permissions';
 import { useFarms } from '@/features/farms/api';
 import {
   ANIMAL_STATUS_CODES,
@@ -63,15 +64,18 @@ export default function AnimalsPage() {
     farm_id: filters.farm_id ?? undefined,
     offset: filters.offset,
   });
+  const { canEdit } = usePermissions();
 
   return (
     <>
       <PageHeader title={t('nav.animals')} count={animals.data?.total}>
-        <Button asChild>
-          <Link to="/animals/new">
-            <Plus className="size-4" /> {t('animals.new')}
-          </Link>
-        </Button>
+        {canEdit && (
+          <Button asChild>
+            <Link to="/animals/new">
+              <Plus className="size-4" /> {t('animals.new')}
+            </Link>
+          </Button>
+        )}
       </PageHeader>
 
       <div className="mb-4 grid grid-cols-2 gap-2 md:flex md:flex-wrap">

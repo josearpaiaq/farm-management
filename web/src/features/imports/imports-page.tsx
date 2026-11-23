@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePermissions } from '@/features/auth/permissions';
 import {
   downloadReport,
   downloadTemplate,
@@ -89,6 +90,7 @@ export default function ImportsPage() {
   const [offset, setOffset] = useState(0);
   const importAnimals = useImportAnimals();
   const jobs = useImportJobs({ offset });
+  const { canEdit } = usePermissions();
 
   const run = (dryRun: boolean) => {
     if (!file) return;
@@ -119,48 +121,50 @@ export default function ImportsPage() {
         </Button>
       </PageHeader>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="text-base">{t('imports.uploadTitle')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4 text-sm text-muted-foreground">
-            {t('imports.uploadHelp')}
-          </p>
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-2">
-              <Label htmlFor="import-file">{t('imports.file')}</Label>
-              <Input
-                id="import-file"
-                ref={fileInput}
-                type="file"
-                accept=".csv,text/csv"
-                className="w-72"
-                onChange={(event) => {
-                  setFile(event.target.files?.[0] ?? null);
-                  setResult(null);
-                }}
-              />
+      {canEdit && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-base">{t('imports.uploadTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4 text-sm text-muted-foreground">
+              {t('imports.uploadHelp')}
+            </p>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="import-file">{t('imports.file')}</Label>
+                <Input
+                  id="import-file"
+                  ref={fileInput}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="w-72"
+                  onChange={(event) => {
+                    setFile(event.target.files?.[0] ?? null);
+                    setResult(null);
+                  }}
+                />
+              </div>
+              <Button
+                variant="outline"
+                disabled={!file || importAnimals.isPending}
+                onClick={() => run(true)}
+              >
+                <FileUp className="size-4" /> {t('imports.validate')}
+              </Button>
+              <Button
+                disabled={
+                  !file || importAnimals.isPending || result?.job.dry_run !== true
+                }
+                onClick={() => run(false)}
+              >
+                {t('imports.commit')}
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              disabled={!file || importAnimals.isPending}
-              onClick={() => run(true)}
-            >
-              <FileUp className="size-4" /> {t('imports.validate')}
-            </Button>
-            <Button
-              disabled={
-                !file || importAnimals.isPending || result?.job.dry_run !== true
-              }
-              onClick={() => run(false)}
-            >
-              {t('imports.commit')}
-            </Button>
-          </div>
-          {result && <ResultPanel result={result} />}
-        </CardContent>
-      </Card>
+            {result && <ResultPanel result={result} />}
+          </CardContent>
+        </Card>
+      )}
 
       <h2 className="mb-3 font-heading text-lg font-semibold">
         {t('imports.history')}

@@ -16,7 +16,7 @@ const ownerRow: Member = {
   created_at: '2026-11-01T00:00:00Z',
 };
 
-function signedInAs(role: 'owner' | 'member') {
+function signedInAs(role: 'owner' | 'viewer') {
   server.use(
     http.get(`${API}/auth/me`, () =>
       HttpResponse.json({ user: { ...testUser, role } }),
@@ -40,14 +40,16 @@ describe('MembersPage', () => {
       id: 'user-2',
       email: 'papa@test.local',
       full_name: 'Papá',
-      role: 'member',
+      role: 'viewer',
       status: 'invited',
       created_at: '2026-11-02T00:00:00Z',
     };
     let members = [ownerRow];
+    let sent: unknown;
     server.use(
       http.get(`${API}/members`, () => HttpResponse.json({ data: members })),
-      http.post(`${API}/members`, () => {
+      http.post(`${API}/members`, async ({ request }) => {
+        sent = await request.json();
         members = [ownerRow, invited];
         return HttpResponse.json(invited, { status: 201 });
       }),
@@ -58,6 +60,12 @@ describe('MembersPage', () => {
 
     expect(await screen.findByText('Papá')).toBeInTheDocument();
     expect(screen.getByText('Invitación pendiente')).toBeInTheDocument();
+    // Read only unless the owner picks otherwise.
+    expect(sent).toEqual({
+      full_name: 'Papá',
+      email: 'papa@test.local',
+      role: 'viewer',
+    });
   });
 
   it('explains when the email already has an account', async () => {
@@ -79,12 +87,14 @@ describe('MembersPage', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows members the list without invite or remove actions', async () => {
-    signedInAs('member');
+  it('shows others the list without invite or remove actions', async () => {
+    signedInAs('viewer');
     renderAt('/members', <MembersPage />);
 
     expect(
-      await screen.findByText('Solo el dueño puede invitar o quitar personas.'),
+      await screen.findByText(
+        'Solo el dueño puede invitar, quitar o cambiar los permisos de las personas.',
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText(ownerRow.full_name)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Invitar/ })).toBeNull();

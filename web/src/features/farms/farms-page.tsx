@@ -17,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePermissions } from '@/features/auth/permissions';
 import {
   useCreateFarm,
   useDeleteFarm,
@@ -127,6 +128,7 @@ export default function FarmsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Farm | null>(null);
   const [deleting, setDeleting] = useState<Farm | null>(null);
+  const { canEdit, canDelete } = usePermissions();
 
   const openNew = () => {
     setEditing(null);
@@ -140,9 +142,11 @@ export default function FarmsPage() {
   return (
     <>
       <PageHeader title={t('nav.farms')} count={farms.data?.total}>
-        <Button onClick={openNew}>
-          <Plus className="size-4" /> {t('farms.new')}
-        </Button>
+        {canEdit && (
+          <Button onClick={openNew}>
+            <Plus className="size-4" /> {t('farms.new')}
+          </Button>
+        )}
       </PageHeader>
 
       {farms.isPending && <Skeleton className="h-40 w-full" />}
@@ -169,22 +173,26 @@ export default function FarmsPage() {
                 </p>
               </div>
               <div className="flex shrink-0 gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t('common.edit')}
-                  onClick={() => openEdit(farm)}
-                >
-                  <Pencil className="size-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t('common.delete')}
-                  onClick={() => setDeleting(farm)}
-                >
-                  <Trash2 className="size-4 text-destructive" />
-                </Button>
+                {canEdit && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t('common.edit')}
+                    onClick={() => openEdit(farm)}
+                  >
+                    <Pencil className="size-4" />
+                  </Button>
+                )}
+                {canDelete && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t('common.delete')}
+                    onClick={() => setDeleting(farm)}
+                  >
+                    <Trash2 className="size-4 text-destructive" />
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

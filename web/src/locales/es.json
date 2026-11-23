@@ -176,21 +176,28 @@
   "members": {
     "invite": "Invitar",
     "inviteTitle": "Invitar a la finca",
-    "inviteHelp": "Le llegará un correo. Para entrar, abre la app, toca \"Entrar con código\" y escribe su correo.",
+    "inviteHelp": "Le llegará un correo. Para entrar, abre la app, toca \"Entrar con un código por correo\" y escribe su correo.",
     "name": "Nombre",
     "email": "Correo electrónico",
     "send": "Enviar invitación",
     "invited": "Invitación enviada a {{email}}",
     "emailTaken": "Ese correo ya tiene una cuenta en la app",
     "you": "Tú",
+    "permissions": "Permisos",
     "role": {
       "owner": "Dueño",
-      "member": "Miembro"
+      "editor": "Editor",
+      "viewer": "Solo lectura"
     },
+    "roleHelp": {
+      "editor": "Puede registrar y editar, pero no borrar.",
+      "viewer": "Puede ver todo, sin cambiar nada."
+    },
+    "roleUpdated": "Permisos de {{name}} actualizados",
     "status": {
       "invited": "Invitación pendiente"
     },
-    "ownerOnly": "Solo el dueño puede invitar o quitar personas.",
+    "ownerOnly": "Solo el dueño puede invitar, quitar o cambiar los permisos de las personas.",
     "remove": "Quitar",
     "removeTitle": "Quitar de la finca",
     "removeDescription": "{{name}} ya no podrá entrar a la app ni ver los datos de la finca. Lo que registró se conserva.",

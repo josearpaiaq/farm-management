@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAnimal, useDeleteAnimal } from '@/features/animals/api';
+import { usePermissions } from '@/features/auth/permissions';
 import {
   HealthTab,
   NotesTab,
@@ -34,6 +35,7 @@ export default function AnimalDetailPage() {
   const animal = useAnimal(id);
   const remove = useDeleteAnimal();
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const { canEdit, canDelete } = usePermissions();
 
   if (animal.isPending) return <Skeleton className="h-64 w-full" />;
   if (animal.isError) {
@@ -54,14 +56,22 @@ export default function AnimalDetailPage() {
         </h1>
         <StatusBadge status={data.status} />
         <div className="ms-auto flex gap-2">
-          <Button variant="outline" asChild>
-            <Link to={`/animals/${data.id}/edit`}>
-              <Pencil className="size-4" /> {t('common.edit')}
-            </Link>
-          </Button>
-          <Button variant="outline" onClick={() => setConfirmDelete(true)}>
-            <Trash2 className="size-4 text-destructive" />
-          </Button>
+          {canEdit && (
+            <Button variant="outline" asChild>
+              <Link to={`/animals/${data.id}/edit`}>
+                <Pencil className="size-4" /> {t('common.edit')}
+              </Link>
+            </Button>
+          )}
+          {canDelete && (
+            <Button
+              variant="outline"
+              aria-label={t('common.delete')}
+              onClick={() => setConfirmDelete(true)}
+            >
+              <Trash2 className="size-4 text-destructive" />
+            </Button>
+          )}
         </div>
       </div>
 

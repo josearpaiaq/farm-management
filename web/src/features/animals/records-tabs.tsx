@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import type { HealthEventInput, WeightInput } from '@/features/animals/api';
+import { usePermissions } from '@/features/auth/permissions';
 import {
   healthEventsApi,
   notesApi,
@@ -33,23 +34,27 @@ function RecordRow({
   onDelete: () => void;
   deleteLabel: string;
 }) {
+  const { canDelete } = usePermissions();
   return (
     <div className="flex items-start justify-between gap-2 border-b py-3 last:border-b-0">
       <div className="min-w-0 flex-1">{children}</div>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label={deleteLabel}
-        onClick={onDelete}
-      >
-        <Trash2 className="size-4 text-destructive" />
-      </Button>
+      {canDelete && (
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label={deleteLabel}
+          onClick={onDelete}
+        >
+          <Trash2 className="size-4 text-destructive" />
+        </Button>
+      )}
     </div>
   );
 }
 
 export function WeightsTab({ animalId }: { animalId: string }) {
   const { t } = useTranslation();
+  const { canEdit } = usePermissions();
   const list = weightsApi.useList(animalId);
   const add = weightsApi.useAdd(animalId);
   const remove = weightsApi.useRemove(animalId);
@@ -82,40 +87,42 @@ export function WeightsTab({ animalId }: { animalId: string }) {
   return (
     <Card>
       <CardContent>
-        <form
-          onSubmit={(e) => void onSubmit(e)}
-          className="mb-4 grid grid-cols-2 items-end gap-2 sm:flex"
-          noValidate
-        >
-          <div className="space-y-2">
-            <Label htmlFor="weight-kg">{t('records.weightKg')}</Label>
-            <Input
-              id="weight-kg"
-              type="number"
-              step="0.01"
-              min="0"
-              inputMode="decimal"
-              className="sm:w-32"
-              {...register('weight_kg', { required: t('validation.required') })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="weight-date">{t('records.date')}</Label>
-            <Input
-              id="weight-date"
-              type="date"
-              className="sm:w-44"
-              {...register('recorded_on', { required: t('validation.required') })}
-            />
-          </div>
-          <Button
-            type="submit"
-            disabled={add.isPending}
-            className="col-span-2 sm:col-span-1"
+        {canEdit && (
+          <form
+            onSubmit={(e) => void onSubmit(e)}
+            className="mb-4 grid grid-cols-2 items-end gap-2 sm:flex"
+            noValidate
           >
-            {t('records.addWeight')}
-          </Button>
-        </form>
+            <div className="space-y-2">
+              <Label htmlFor="weight-kg">{t('records.weightKg')}</Label>
+              <Input
+                id="weight-kg"
+                type="number"
+                step="0.01"
+                min="0"
+                inputMode="decimal"
+                className="sm:w-32"
+                {...register('weight_kg', { required: t('validation.required') })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="weight-date">{t('records.date')}</Label>
+              <Input
+                id="weight-date"
+                type="date"
+                className="sm:w-44"
+                {...register('recorded_on', { required: t('validation.required') })}
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={add.isPending}
+              className="col-span-2 sm:col-span-1"
+            >
+              {t('records.addWeight')}
+            </Button>
+          </form>
+        )}
         {(errors.weight_kg ?? errors.recorded_on) && (
           <p className="mb-2 text-sm text-destructive">
             {errors.weight_kg?.message ?? errors.recorded_on?.message}
@@ -153,6 +160,7 @@ export function WeightsTab({ animalId }: { animalId: string }) {
 
 export function HealthTab({ animalId }: { animalId: string }) {
   const { t } = useTranslation();
+  const { canEdit } = usePermissions();
   const list = healthEventsApi.useList(animalId);
   const add = healthEventsApi.useAdd(animalId);
   const remove = healthEventsApi.useRemove(animalId);
@@ -204,75 +212,77 @@ export function HealthTab({ animalId }: { animalId: string }) {
   return (
     <Card>
       <CardContent>
-        <form
-          onSubmit={(e) => void onSubmit(e)}
-          className="mb-4 grid gap-3 sm:grid-cols-2"
-          noValidate
-        >
-          <div className="space-y-2">
-            <Label htmlFor="health-type">{t('records.eventType')}</Label>
-            <Controller
-              control={control}
-              name="event_type"
-              rules={{ required: t('validation.required') }}
-              render={({ field }) => (
-                <VocabSelect
-                  id="health-type"
-                  className="w-full"
-                  value={field.value || null}
-                  onValueChange={(v) => field.onChange(v ?? '')}
-                  codes={HEALTH_EVENT_CODES}
-                  prefix="vocab.healthEvent"
-                  placeholder={t('common.select')}
-                />
-              )}
-            />
-            {errors.event_type && (
-              <p className="text-sm text-destructive">
-                {errors.event_type.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="health-date">{t('records.date')}</Label>
-            <Input
-              id="health-date"
-              type="date"
-              {...register('occurred_on', { required: t('validation.required') })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="health-product">{t('records.product')}</Label>
-            <Input id="health-product" {...register('product')} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="health-withdrawal">
-              {t('records.withdrawalUntil')}
-            </Label>
-            <Input
-              id="health-withdrawal"
-              type="date"
-              {...register('withdrawal_until')}
-            />
-          </div>
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="health-description">
-              {t('records.description')}
-            </Label>
-            <Textarea
-              id="health-description"
-              rows={2}
-              {...register('description')}
-            />
-          </div>
-          <Button
-            type="submit"
-            disabled={add.isPending}
-            className="sm:col-span-2 sm:justify-self-end"
+        {canEdit && (
+          <form
+            onSubmit={(e) => void onSubmit(e)}
+            className="mb-4 grid gap-3 sm:grid-cols-2"
+            noValidate
           >
-            {t('records.addHealth')}
-          </Button>
-        </form>
+            <div className="space-y-2">
+              <Label htmlFor="health-type">{t('records.eventType')}</Label>
+              <Controller
+                control={control}
+                name="event_type"
+                rules={{ required: t('validation.required') }}
+                render={({ field }) => (
+                  <VocabSelect
+                    id="health-type"
+                    className="w-full"
+                    value={field.value || null}
+                    onValueChange={(v) => field.onChange(v ?? '')}
+                    codes={HEALTH_EVENT_CODES}
+                    prefix="vocab.healthEvent"
+                    placeholder={t('common.select')}
+                  />
+                )}
+              />
+              {errors.event_type && (
+                <p className="text-sm text-destructive">
+                  {errors.event_type.message}
+                </p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="health-date">{t('records.date')}</Label>
+              <Input
+                id="health-date"
+                type="date"
+                {...register('occurred_on', { required: t('validation.required') })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="health-product">{t('records.product')}</Label>
+              <Input id="health-product" {...register('product')} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="health-withdrawal">
+                {t('records.withdrawalUntil')}
+              </Label>
+              <Input
+                id="health-withdrawal"
+                type="date"
+                {...register('withdrawal_until')}
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="health-description">
+                {t('records.description')}
+              </Label>
+              <Textarea
+                id="health-description"
+                rows={2}
+                {...register('description')}
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={add.isPending}
+              className="sm:col-span-2 sm:justify-self-end"
+            >
+              {t('records.addHealth')}
+            </Button>
+          </form>
+        )}
 
         {list.isPending && <Skeleton className="h-24 w-full" />}
         {list.data?.data.length === 0 && (
@@ -324,6 +334,7 @@ export function HealthTab({ animalId }: { animalId: string }) {
 
 export function NotesTab({ animalId }: { animalId: string }) {
   const { t } = useTranslation();
+  const { canEdit } = usePermissions();
   const list = notesApi.useList(animalId);
   const add = notesApi.useAdd(animalId);
   const remove = notesApi.useRemove(animalId);
@@ -354,22 +365,24 @@ export function NotesTab({ animalId }: { animalId: string }) {
   return (
     <Card>
       <CardContent>
-        <form onSubmit={(e) => void onSubmit(e)} className="mb-4 space-y-2" noValidate>
-          <Label htmlFor="note-body">{t('records.newNote')}</Label>
-          <Textarea
-            id="note-body"
-            rows={3}
-            {...register('body', { required: t('validation.required') })}
-          />
-          {errors.body && (
-            <p className="text-sm text-destructive">{errors.body.message}</p>
-          )}
-          <div className="flex justify-end">
-            <Button type="submit" disabled={add.isPending}>
-              {t('records.addNote')}
-            </Button>
-          </div>
-        </form>
+        {canEdit && (
+          <form onSubmit={(e) => void onSubmit(e)} className="mb-4 space-y-2" noValidate>
+            <Label htmlFor="note-body">{t('records.newNote')}</Label>
+            <Textarea
+              id="note-body"
+              rows={3}
+              {...register('body', { required: t('validation.required') })}
+            />
+            {errors.body && (
+              <p className="text-sm text-destructive">{errors.body.message}</p>
+            )}
+            <div className="flex justify-end">
+              <Button type="submit" disabled={add.isPending}>
+                {t('records.addNote')}
+              </Button>
+            </div>
+          </form>
+        )}
 
         {list.isPending && <Skeleton className="h-24 w-full" />}
         {list.data?.data.length === 0 && (

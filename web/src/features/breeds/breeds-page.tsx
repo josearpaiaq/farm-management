@@ -17,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { usePermissions } from '@/features/auth/permissions';
 import { useBreeds, useCreateBreed } from '@/features/breeds/api';
 import type { Species } from '@/lib/api/types';
 import { SPECIES_CODES } from '@/lib/api/types';
@@ -128,13 +129,16 @@ export default function BreedsPage() {
   const [offset, setOffset] = useState(0);
   const breeds = useBreeds({ species, offset });
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { canEdit } = usePermissions();
 
   return (
     <>
       <PageHeader title={t('nav.breeds')} count={breeds.data?.total}>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="size-4" /> {t('breeds.new')}
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="size-4" /> {t('breeds.new')}
+          </Button>
+        )}
       </PageHeader>
 
       <div className="mb-4">

@@ -1,6 +1,6 @@
 import { Trash2, UserPlus } from 'lucide-react';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -18,19 +18,23 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
+import { VocabSelect } from '@/components/vocab-select';
 import { useMe } from '@/features/auth/api';
+import { usePermissions } from '@/features/auth/permissions';
 import {
   useInviteMember,
   useMembers,
   useRemoveMember,
+  useUpdateMember,
 } from '@/features/members/api';
 import { ApiError } from '@/lib/api/client';
-import type { Member } from '@/lib/api/types';
+import { MEMBER_ROLES, type Member, type MemberRole } from '@/lib/api/types';
 import { applyFieldErrors, errorMessage } from '@/lib/form';
 
 interface InviteForm {
   full_name: string;
   email: string;
+  role: MemberRole;
 }
 
 function InviteDialog({
@@ -47,8 +51,12 @@ function InviteDialog({
     handleSubmit,
     reset,
     setError,
+    control,
+    watch,
     formState: { errors },
-  } = useForm<InviteForm>({ defaultValues: { full_name: '', email: '' } });
+  } = useForm<InviteForm>({
+    defaultValues: { full_name: '', email: '', role: 'viewer' },
+  });
 
   const onSubmit = handleSubmit((values) =>
     invite.mutate(values, {
@@ -99,6 +107,25 @@ function InviteDialog({
               <p className="text-sm text-destructive">{errors.email.message}</p>
             )}
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="member-role">{t('members.permissions')}</Label>
+            <Controller
+              control={control}
+              name="role"
+              render={({ field }) => (
+                <VocabSelect
+                  id="member-role"
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  codes={MEMBER_ROLES}
+                  prefix="members.role"
+                />
+              )}
+            />
+            <p className="text-sm text-muted-foreground">
+              {t(`members.roleHelp.${watch('role')}`)}
+            </p>
+          </div>
           <div className="flex justify-end gap-2">
             <Button
               type="button"
@@ -122,9 +149,20 @@ export default function MembersPage() {
   const me = useMe();
   const members = useMembers();
   const remove = useRemoveMember();
+  const update = useUpdateMember();
   const [inviting, setInviting] = useState(false);
   const [removing, setRemoving] = useState<Member | null>(null);
-  const isOwner = me.data?.role === 'owner';
+  const { isOwner } = usePermissions();
+
+  const changeRole = (member: Member, role: MemberRole) =>
+    update.mutate(
+      { id: member.id, role },
+      {
+        onSuccess: () =>
+          toast.success(t('members.roleUpdated', { name: member.full_name })),
+        onError: (error) => toast.error(errorMessage(error)),
+      },
+    );
 
   return (
     <>
@@ -164,10 +202,22 @@ export default function MembersPage() {
                 <p className="truncate text-sm text-muted-foreground">
                   {member.email}
                 </p>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="secondary">
-                    {t(`members.role.${member.role}`)}
-                  </Badge>
+                <div className="flex flex-wrap items-center gap-1">
+                  {isOwner && member.role !== 'owner' ? (
+                    <VocabSelect
+                      className="h-8 w-40"
+                      value={member.role}
+                      onValueChange={(role) =>
+                        role && changeRole(member, role as MemberRole)
+                      }
+                      codes={MEMBER_ROLES}
+                      prefix="members.role"
+                    />
+                  ) : (
+                    <Badge variant="secondary">
+                      {t(`members.role.${member.role}`)}
+                    </Badge>
+                  )}
                   {member.status === 'invited' && (
                     <Badge variant="outline">
                       {t('members.status.invited')}

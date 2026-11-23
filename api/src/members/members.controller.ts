@@ -7,12 +7,14 @@ import {
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Patch,
   Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CurrentOrgId } from '../common/decorators/current-org-id.decorator';
 import { CurrentUserId } from '../common/decorators/current-user-id.decorator';
 import { InviteMemberDto } from './dto/invite-member.dto';
+import { UpdateMemberDto } from './dto/update-member.dto';
 import { MembersService } from './members.service';
 
 const uuidPipe = new ParseUUIDPipe({
@@ -36,6 +38,16 @@ export class MembersController {
     @Body() dto: InviteMemberDto,
   ) {
     return this.membersService.invite(organizationId, userId, dto);
+  }
+
+  @Patch(':id')
+  update(
+    @CurrentOrgId() organizationId: string,
+    @CurrentUserId() userId: string,
+    @Param('id', uuidPipe) id: string,
+    @Body() dto: UpdateMemberDto,
+  ) {
+    return this.membersService.update(organizationId, userId, id, dto);
   }
 
   @Delete(':id')

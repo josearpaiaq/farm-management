@@ -33,6 +33,7 @@ describe('Members (e2e)', () => {
   const codes = new Map<string, string>();
   const invitations: { to: string; organizationName: string }[] = [];
   const memberEmail = `e2e-member-${Date.now()}@test.local`;
+  let sharedFarmId: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -92,14 +93,14 @@ describe('Members (e2e)', () => {
     expect(data[0]).toMatchObject({ role: 'owner', status: 'active' });
   });
 
-  it('invites a member, who joins the same organization with a code', async () => {
+  it('invites a read-only member, who joins the same organization with a code', async () => {
     const invited = await owner
       .post('/api/v1/members')
       .send({ full_name: 'Papá', email: memberEmail.toUpperCase() })
       .expect(201);
     expect(invited.body as Member).toMatchObject({
       email: memberEmail,
-      role: 'member',
+      role: 'viewer',
       status: 'invited',
     });
     expect(invitations).toEqual([expect.objectContaining({ to: memberEmail })]);
@@ -107,7 +108,7 @@ describe('Members (e2e)', () => {
     const member = await signInWithCode(memberEmail);
     const me = await member.get('/api/v1/auth/me').expect(200);
     expect(me.body).toMatchObject({
-      user: { organization_id: organizationId, role: 'member' },
+      user: { organization_id: organizationId, role: 'viewer' },
     });
 
     // Same organization: the owner's farm is visible to the member.
@@ -115,6 +116,7 @@ describe('Members (e2e)', () => {
       .post('/api/v1/farms')
       .send({ name: 'Fundo compartido' })
       .expect(201);
+    sharedFarmId = (farm.body as { id: string }).id;
     const farms = await member.get('/api/v1/farms').expect(200);
     expect((farms.body as { data: { id: string }[] }).data).toEqual([
       expect.objectContaining({ id: (farm.body as { id: string }).id }),
@@ -133,19 +135,56 @@ describe('Members (e2e)', () => {
       .expect(409);
   });
 
-  it('only lets the owner manage members', async () => {
-    const member = await signInWithCode(memberEmail);
-    await member.get('/api/v1/members').expect(200);
-    await member
+  it('keeps viewers read only', async () => {
+    const viewer = await signInWithCode(memberEmail);
+    await viewer.get('/api/v1/farms').expect(200);
+    await viewer.post('/api/v1/farms').send({ name: 'Nope' }).expect(403);
+    await viewer
+      .patch(`/api/v1/farms/${sharedFarmId}`)
+      .send({ name: 'Nope' })
+      .expect(403);
+    await viewer.delete(`/api/v1/farms/${sharedFarmId}`).expect(403);
+  });
+
+  it('lets the owner make someone an editor, who can add and edit but not delete', async () => {
+    const { data } = (await owner.get('/api/v1/members')).body as {
+      data: Member[];
+    };
+    const memberRow = data.find((m) => m.email === memberEmail)!;
+    const ownerRow = data.find((m) => m.role === 'owner')!;
+
+    await owner
+      .patch(`/api/v1/members/${memberRow.id}`)
+      .send({ role: 'owner' })
+      .expect(422);
+    await owner
+      .patch(`/api/v1/members/${ownerRow.id}`)
+      .send({ role: 'viewer' })
+      .expect(400);
+    const updated = await owner
+      .patch(`/api/v1/members/${memberRow.id}`)
+      .send({ role: 'editor' })
+      .expect(200);
+    expect(updated.body as Member).toMatchObject({ role: 'editor' });
+
+    // The role travels in the access token: a new sign-in picks it up.
+    const editor = await signInWithCode(memberEmail);
+    await editor.post('/api/v1/farms').send({ name: 'Potrero 2' }).expect(201);
+    await editor
+      .patch(`/api/v1/farms/${sharedFarmId}`)
+      .send({ location: 'Portuguesa' })
+      .expect(200);
+    await editor.delete(`/api/v1/farms/${sharedFarmId}`).expect(403);
+
+    // Managing people stays with the owner.
+    await editor
       .post('/api/v1/members')
       .send({ full_name: 'Vecino', email: 'vecino@test.local' })
       .expect(403);
-
-    const { data } = (await member.get('/api/v1/members')).body as {
-      data: Member[];
-    };
-    const ownerRow = data.find((m) => m.role === 'owner')!;
-    await member.delete(`/api/v1/members/${ownerRow.id}`).expect(403);
+    await editor
+      .patch(`/api/v1/members/${memberRow.id}`)
+      .send({ role: 'viewer' })
+      .expect(403);
   });
 
   it('removes a member and signs them out', async () => {

@@ -1,4 +1,5 @@
 import { INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as argon2 from 'argon2';
 import request from 'supertest';
@@ -87,7 +88,10 @@ describe('Auth (e2e)', () => {
   // Issues a fresh login (token family) directly, so these tests stay under
   // the per-IP rate limit on POST /auth/login.
   const issueRefresh = async () => {
-    const user = await prisma.users.findFirstOrThrow({ where: { email } });
+    const user = await prisma.users.findFirstOrThrow({
+      where: { email },
+      include: { roles: true },
+    });
     return (await app.get(TokensService).issue(user)).refreshToken;
   };
   const me = (accessToken: string) =>
@@ -95,6 +99,14 @@ describe('Auth (e2e)', () => {
 
   it('rejects a tampered access token', async () => {
     await me('not-a-jwt').expect(401);
+  });
+
+  it('rejects a token issued before roles, so the client refreshes', async () => {
+    const user = await prisma.users.findFirstOrThrow({ where: { email } });
+    const legacy = await app
+      .get(JwtService)
+      .signAsync({ sub: user.id, org: user.organization_id });
+    await me(legacy).expect(401);
   });
 
   it('web login: access token in the body, refresh token in an httpOnly cookie', async () => {

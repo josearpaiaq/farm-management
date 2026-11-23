@@ -35,7 +35,10 @@ CREATE TABLE roles (
     name text     NOT NULL UNIQUE
 );
 
-INSERT INTO roles (id, name) VALUES (1, 'owner'), (2, 'member');
+-- owner: everything, including managing people. editor: reads, creates and
+-- edits, never deletes. viewer: read only. Enforced by the API's
+-- PermissionsGuard from the role carried in the access token.
+INSERT INTO roles (id, name) VALUES (1, 'owner'), (2, 'viewer'), (3, 'editor');
 
 CREATE TABLE users (
     id              uuid        PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -1,4 +1,12 @@
-import { IsEmail, IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import {
+  IsEmail,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
+import { MEMBER_ROLES, type MemberRole } from '../members.service';
 
 export class InviteMemberDto {
   @IsString()
@@ -8,4 +16,9 @@ export class InviteMemberDto {
 
   @IsEmail()
   email: string;
+
+  // Defaults to viewer (read only).
+  @IsOptional()
+  @IsIn(MEMBER_ROLES)
+  role?: MemberRole;
 }

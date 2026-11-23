@@ -33,7 +33,14 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = await this.jwt.verifyAsync<AccessTokenPayload>(token);
-      request.user = { userId: payload.sub, organizationId: payload.org };
+      // Tokens issued before roles were added to the payload: the client
+      // refreshes on 401 and gets one that carries the role.
+      if (!payload.role) throw new UnauthorizedException();
+      request.user = {
+        userId: payload.sub,
+        organizationId: payload.org,
+        role: payload.role,
+      };
     } catch {
       // Expired or tampered: the client should refresh and retry.
       throw new UnauthorizedException();

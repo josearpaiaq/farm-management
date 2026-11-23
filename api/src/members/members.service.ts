@@ -10,17 +10,22 @@ import { randomBytes } from 'node:crypto';
 import { Prisma } from '../generated/prisma/client';
 import { EmailService } from '../auth/email.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { InviteMemberDto } from './dto/invite-member.dto';
+import type { InviteMemberDto } from './dto/invite-member.dto';
+import type { UpdateMemberDto } from './dto/update-member.dto';
+
+// Roles the owner can give to other people (ids from the roles table).
+export const MEMBER_ROLES = ['viewer', 'editor'] as const;
+export type MemberRole = (typeof MEMBER_ROLES)[number];
 
 const OWNER_ROLE_ID = 1;
-const MEMBER_ROLE_ID = 2;
+const ROLE_IDS: Record<MemberRole, number> = { viewer: 2, editor: 3 };
 
 type MemberRow = Prisma.usersGetPayload<{ include: { roles: true } }>;
 
 // People who share an organization. Anyone in it can see the list; only the
-// owner invites and removes. Invited members get no password: they sign in
-// with an emailed code (which also verifies their email) and can set a
-// password later through "forgot password".
+// owner invites, changes roles and removes. Invited members get no password:
+// they sign in with an emailed code (which also verifies their email) and can
+// set a password later through "forgot password".
 @Injectable()
 export class MembersService {
   constructor(
@@ -32,7 +37,8 @@ export class MembersService {
     const users = await this.prisma.users.findMany({
       where: { organization_id: organizationId },
       include: { roles: true },
-      orderBy: [{ role_id: 'asc' }, { full_name: 'asc' }],
+      // The owner signed up first, so they lead the list.
+      orderBy: { created_at: 'asc' },
     });
     return { data: users.map(toMember) };
   }
@@ -53,7 +59,7 @@ export class MembersService {
       member = await this.prisma.users.create({
         data: {
           organization_id: organizationId,
-          role_id: MEMBER_ROLE_ID,
+          role_id: ROLE_IDS[dto.role ?? 'viewer'],
           email,
           password_hash: passwordHash,
           full_name: dto.full_name,
@@ -77,15 +83,26 @@ export class MembersService {
     return toMember(member);
   }
 
+  // Takes effect at the member's next token refresh (<= 15 minutes).
+  async update(
+    organizationId: string,
+    userId: string,
+    memberId: string,
+    dto: UpdateMemberDto,
+  ) {
+    await this.assertOwner(organizationId, userId);
+    await this.findOtherMember(organizationId, userId, memberId);
+    const member = await this.prisma.users.update({
+      where: { id: memberId },
+      data: { role_id: ROLE_IDS[dto.role] },
+      include: { roles: true },
+    });
+    return toMember(member);
+  }
+
   async remove(organizationId: string, userId: string, memberId: string) {
     await this.assertOwner(organizationId, userId);
-    if (memberId === userId) {
-      throw new BadRequestException('The owner cannot remove themselves');
-    }
-    const member = await this.prisma.users.findFirst({
-      where: { id: memberId, organization_id: organizationId },
-    });
-    if (!member) throw new NotFoundException('Member not found');
+    await this.findOtherMember(organizationId, userId, memberId);
     await this.prisma.$transaction([
       // Keep their CSV imports, just forget who uploaded them.
       this.prisma.import_jobs.updateMany({
@@ -96,6 +113,22 @@ export class MembersService {
       // as soon as their current access token expires.
       this.prisma.users.delete({ where: { id: memberId } }),
     ]);
+  }
+
+  // The owner's own row is off limits: a farm always keeps its owner.
+  private async findOtherMember(
+    organizationId: string,
+    userId: string,
+    memberId: string,
+  ) {
+    if (memberId === userId) {
+      throw new BadRequestException('The owner cannot change themselves');
+    }
+    const member = await this.prisma.users.findFirst({
+      where: { id: memberId, organization_id: organizationId },
+    });
+    if (!member) throw new NotFoundException('Member not found');
+    return member;
   }
 
   private async assertOwner(organizationId: string, userId: string) {

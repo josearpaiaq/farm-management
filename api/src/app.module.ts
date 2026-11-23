@@ -13,6 +13,7 @@ import { ImportsModule } from './imports/imports.module';
 import { MembersModule } from './members/members.module';
 import { ACCESS_TOKEN_TTL_SECONDS } from './auth/tokens.service';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
+import { PermissionsGuard } from './common/guards/permissions.guard';
 import { HealthController } from './health/health.controller';
 import { PrismaModule } from './prisma/prisma.module';
 
@@ -52,6 +53,10 @@ import { PrismaModule } from './prisma/prisma.module';
       : []),
   ],
   controllers: [HealthController],
-  providers: [{ provide: APP_GUARD, useClass: JwtAuthGuard }],
+  // Global guards run in order: authenticate, then check the role.
+  providers: [
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
+    { provide: APP_GUARD, useClass: PermissionsGuard },
+  ],
 })
 export class AppModule {}

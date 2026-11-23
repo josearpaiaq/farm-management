@@ -6,6 +6,13 @@ import { PrismaService } from '../prisma/prisma.service';
 export interface AccessTokenPayload {
   sub: string; // user id
   org: string; // organization id
+  role: string; // owner | editor | viewer (see PermissionsGuard)
+}
+
+interface TokenUser {
+  id: string;
+  organization_id: string;
+  roles: { name: string };
 }
 
 export interface IssuedTokens {
@@ -30,10 +37,7 @@ export class TokensService {
   ) {}
 
   // A new login: starts a new refresh token family.
-  async issue(user: {
-    id: string;
-    organization_id: string;
-  }): Promise<IssuedTokens> {
+  async issue(user: TokenUser): Promise<IssuedTokens> {
     return this.issueInFamily(user, randomUUID());
   }
 
@@ -46,7 +50,9 @@ export class TokensService {
   } | null> {
     const record = await this.prisma.refresh_tokens.findUnique({
       where: { token_hash: hash(refreshToken) },
-      include: { users: true },
+      // The new access token carries the user's current role, so a role
+      // change applies at the next refresh.
+      include: { users: { include: { roles: true } } },
     });
     if (!record) return null;
 
@@ -90,7 +96,7 @@ export class TokensService {
   }
 
   private async issueInFamily(
-    user: { id: string; organization_id: string },
+    user: TokenUser,
     familyId: string,
   ): Promise<IssuedTokens> {
     const refreshToken = randomBytes(32).toString('base64url');
@@ -105,6 +111,7 @@ export class TokensService {
     const payload: AccessTokenPayload = {
       sub: user.id,
       org: user.organization_id,
+      role: user.roles.name,
     };
     return { accessToken: await this.jwt.signAsync(payload), refreshToken };
   }

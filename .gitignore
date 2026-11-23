@@ -1,1 +1,7 @@
 .superpowers/
+
+docker-db-manual.md
+
+.local
+# Production secrets on the server (see deploy/.env.example)
+deploy/.env

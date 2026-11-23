@@ -30,10 +30,9 @@ was written, so the database schema and API contract carry over unchanged.
 - Prisma as the ORM. The existing `schema.sql` can be introspected with
   `prisma db pull` to bootstrap the Prisma schema. (Drizzle is a lighter,
   SQL-first alternative if more control over queries is wanted later.)
-- Server-side sessions stored in an httpOnly, Secure cookie for authentication
-  (see Security for the JWT-vs-session rationale).
-- Validation with Zod (or class-validator). CSRF protection on all mutating
-  requests.
+- Token authentication: short-lived JWT access tokens plus rotating refresh
+  tokens (see Security for the rationale and the per-client transport).
+- Validation with Zod (or class-validator).
 
 **Frontend**
 - React with Vite, TypeScript (mandatory).
@@ -72,8 +71,8 @@ workspaces + Turborepo) with a `shared` package. This is intentionally deferred.
 - **API as the contract.** All business logic lives behind the API; clients are
   thin. Layering: controllers (HTTP) → services (business logic) → repositories
   (Prisma/data access).
-- **Tenancy from the session.** The organization is derived from the
-  authenticated session, never from the request. Resources are flat
+- **Tenancy from the access token.** The organization is derived from the
+  verified access token, never from the request. Resources are flat
   (`/animals`, not `/orgs/{id}/animals`), so a client can only ever access its
   own organization's data.
 - **Event-sourced domain.** Anything that changes over time (weight, health,
@@ -121,14 +120,26 @@ resolution).
 
 ## Security
 
-- **Sessions over JWT.** For a single backend, server-side sessions in an
-  httpOnly, Secure cookie are simpler and safer than JWT in `localStorage`
-  (no XSS token theft, easy revocation on logout/role change). The statelessness
-  benefit of JWT is not needed at this scale.
-- **CSRF.** Because auth is cookie-based, all state-changing requests require an
-  `X-CSRF-Token` header.
+- **Access + refresh tokens.** Chosen (2026-10-23, replacing server-side
+  sessions) so the same API serves the web app and future mobile/desktop
+  clients. Access tokens are HS256 JWTs valid for 15 minutes, sent as
+  `Authorization: Bearer`. Refresh tokens are opaque random values (only a
+  SHA-256 hash is stored in `refresh_tokens`) that expire after 30 days
+  *without use*: every refresh rotates the token (sliding expiry).
+- **Refresh token transport per client.** Web: an httpOnly, `SameSite=Strict`
+  cookie scoped to `/api/v1/auth`, invisible to JavaScript; the access token is
+  kept in memory only. Native clients send `X-Auth-Transport: body` and get/send
+  the refresh token in the JSON body (stored in the OS keychain/keystore).
+- **Reuse detection.** Presenting an already-rotated refresh token revokes the
+  whole token family (the login), cutting off a thief and the victim alike. A
+  short grace window tolerates concurrent refreshes from two browser tabs.
+  Password reset revokes every refresh token of the user; access tokens already
+  issued stay valid until they expire (at most 15 minutes).
+- **CSRF.** Not applicable to bearer-authenticated routes (browsers never attach
+  the header on their own). The refresh cookie is `SameSite=Strict`, so it is
+  never sent on cross-site requests.
 - **Object-level authorization (IDOR) is the primary risk.** Every query is
-  scoped to the session's `organization_id`; this is enforced centrally so a
+  scoped to the access token's `organization_id`; this is enforced centrally so a
   forgotten filter cannot leak another tenant's data. This matters more than the
   usual OWASP checklist.
 - **SQL injection** is handled by Prisma's parameterized queries (no string
@@ -145,7 +156,9 @@ All security handling is documented in the code, in English.
 
 ### MVP
 
-- Authentication (single organization) with session + CSRF.
+- Authentication with access + refresh tokens; self-service sign-up (one
+  organization per sign-up), email verification, passwordless login with an
+  emailed code, and password reset.
 - Farms: create, list, view, edit, delete (rejected if the farm still has
   animals).
 - Breeds: per-organization catalog (list, create).

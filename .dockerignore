@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/.env
+**/.env.*
+**/coverage
+api/src/generated
+.git
+.local
+.vscode
+docs
+deploy

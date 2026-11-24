@@ -97,7 +97,7 @@ jobs:
       # :latest for the server to pull, plus :sha-<commit> to know exactly
       # what runs and to roll back to an earlier build.
       - id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |

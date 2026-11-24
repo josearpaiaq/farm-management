@@ -1,8 +1,12 @@
 # Production stack for a single server (AWS Lightsail): the app image plus
 # Caddy for HTTPS. The database is external (Neon), set via DATABASE_URL.
-# Run from this directory: docker compose up -d --build
+# Run from this directory: docker compose pull && docker compose up -d
 services:
   app:
+    # Built and pushed by GitHub Actions (.github/workflows/ci.yml) on every
+    # push to main. APP_TAG=sha-<commit> in .env pins an earlier build.
+    image: ghcr.io/josearpaiaq/farm-management:${APP_TAG:-latest}
+    # Fallback: `docker compose up -d --build` builds it on the server.
     build:
       context: ..
     env_file: .env

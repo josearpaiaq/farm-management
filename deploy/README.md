@@ -9,6 +9,12 @@ Cloud Run) only needs the same image and env vars.
 browser ──HTTPS──> Caddy :443 ──> app :3000 ──> Neon (Postgres)
 ```
 
+The app image is built by GitHub Actions on every push to `main`
+(`.github/workflows/ci.yml`, after the tests pass) and pushed to GitHub
+Container Registry as `ghcr.io/josearpaiaq/farm-management`, tagged
+`latest` and `sha-<commit>`. The server only downloads it; deploying is a
+manual `docker compose pull && docker compose up -d`.
+
 ## 1. Database (Neon)
 
 1. Create a project at neon.tech and copy its connection string
@@ -54,10 +60,18 @@ by hand, the same way they're applied to the local database.
    git clone git@github.com:josearpaiaq/farm-management.git
    cd farm-management/deploy
    cp .env.example .env && nano .env   # DOMAIN, DATABASE_URL, AUTH_SECRET…
-   docker compose up -d --build
    ```
 
-6. Open `https://<DOMAIN>`. Caddy issues the certificate on the first
+6. Let the server download the private image: create a GitHub token
+   (Settings > Developer settings > Personal access tokens > Tokens
+   (classic)) with only the `read:packages` scope, then log in once:
+
+   ```bash
+   docker login ghcr.io -u <github-user>   # paste the token as password
+   docker compose pull && docker compose up -d
+   ```
+
+7. Open `https://<DOMAIN>`. Caddy issues the certificate on the first
    request, which can take a few seconds.
 
 ## Day to day
@@ -66,8 +80,10 @@ Run these in `farm-management/deploy` on the server.
 
 | Task | Command |
 | --- | --- |
-| Deploy the latest code | `git pull && docker compose build --pull && docker compose up -d` |
-| Security updates (Node base image, Caddy, OS) | `docker compose build --pull && docker compose pull caddy && docker compose up -d`, then `sudo apt update && sudo apt upgrade -y` |
+| Deploy the latest image (after CI on `main` is green) | `git pull && docker compose pull && docker compose up -d` |
+| Roll back | set `APP_TAG=sha-<commit>` in `.env`, then `docker compose up -d` |
+| Security updates (Caddy, OS) | `docker compose pull caddy && docker compose up -d`, then `sudo apt update && sudo apt upgrade -y` |
+| Remove old images (frees disk) | `docker image prune -f` |
 | App logs (and emailed codes while Resend is off) | `docker compose logs -f app` |
 | Restart | `docker compose restart app` |
 | Stop everything | `docker compose down` |

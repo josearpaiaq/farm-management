@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useMe, useRegister } from '@/features/auth/api';
 import {
@@ -20,8 +21,13 @@ interface RegisterForm {
   password: string;
 }
 
+// Signing up always creates a new organization. People joining an existing
+// one don't sign up: the owner invites them, which creates their account.
+type Step = 'choose' | 'create' | 'join';
+
 export default function RegisterPage() {
   const { t } = useTranslation();
+  const [step, setStep] = useState<Step>('choose');
   const navigate = useNavigate();
   const me = useMe();
   const signUp = useRegister();
@@ -55,11 +61,45 @@ export default function RegisterPage() {
     !(signUp.error instanceof ApiError && signUp.error.details?.length) &&
     !(signUp.error instanceof ApiError && signUp.error.status === 409);
 
+  const footer = <AuthLink to="/login">{t('auth.haveAccount')}</AuthLink>;
+
+  if (step === 'choose') {
+    return (
+      <AuthShell subtitle={t('auth.registerChoice')} footer={footer}>
+        <Button className="w-full" onClick={() => setStep('create')}>
+          {t('auth.createOrganization')}
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={() => setStep('join')}
+        >
+          {t('auth.joinOrganization')}
+        </Button>
+      </AuthShell>
+    );
+  }
+
+  if (step === 'join') {
+    return (
+      <AuthShell subtitle={t('auth.joinOrganization')} footer={footer}>
+        <p className="text-sm text-muted-foreground">{t('auth.joinHelp')}</p>
+        <Button asChild className="w-full">
+          <Link to="/login/code">{t('auth.loginWithCode')}</Link>
+        </Button>
+        <Button
+          variant="ghost"
+          className="w-full"
+          onClick={() => setStep('choose')}
+        >
+          {t('common.back')}
+        </Button>
+      </AuthShell>
+    );
+  }
+
   return (
-    <AuthShell
-      subtitle={t('auth.registerSubtitle')}
-      footer={<AuthLink to="/login">{t('auth.haveAccount')}</AuthLink>}
-    >
+    <AuthShell subtitle={t('auth.registerSubtitle')} footer={footer}>
       <form
         onSubmit={(event) => void onSubmit(event)}
         className="space-y-4"

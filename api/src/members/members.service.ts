@@ -62,7 +62,8 @@ export class MembersService {
           role_id: ROLE_IDS[dto.role ?? 'viewer'],
           email,
           password_hash: passwordHash,
-          full_name: dto.full_name,
+          first_name: dto.first_name,
+          last_name: dto.last_name,
         },
         include: { roles: true },
       });
@@ -77,7 +78,7 @@ export class MembersService {
     }
     await this.email.sendInvitation(
       email,
-      owner.full_name,
+      `${owner.first_name} ${owner.last_name}`,
       owner.organizations.name,
     );
     return toMember(member);
@@ -147,7 +148,8 @@ function toMember(user: MemberRow) {
   return {
     id: user.id,
     email: user.email,
-    full_name: user.full_name,
+    first_name: user.first_name,
+    last_name: user.last_name,
     role: user.roles.name,
     // Invited members stay pending until their first code sign-in.
     status: user.email_verified_at ? 'active' : 'invited',

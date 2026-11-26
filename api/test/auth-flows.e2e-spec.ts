@@ -65,16 +65,28 @@ describe('Auth flows: register, email codes, password reset (e2e)', () => {
 
   it('rejects a weak registration with 422', () => {
     return post('register', {
-      full_name: 'E2E',
+      first_name: 'E2E',
+      last_name: 'Weak',
       organization_name: 'E2E Org',
       email,
       password: 'short',
     }).expect(422);
   });
 
+  it('rejects a blank name once trimmed', () => {
+    return post('register', {
+      first_name: '   ',
+      last_name: 'Blank',
+      organization_name: 'E2E Org',
+      email,
+      password,
+    }).expect(422);
+  });
+
   it('registers an unverified owner of a new organization', async () => {
     await post('register', {
-      full_name: 'E2E Flows',
+      first_name: 'E2E',
+      last_name: 'Flows',
       organization_name: 'E2E Flows Org',
       email,
       password,
@@ -82,7 +94,8 @@ describe('Auth flows: register, email codes, password reset (e2e)', () => {
     expect(lastCode(email, 'verify_email')).toMatch(/^\d{6}$/);
 
     await post('register', {
-      full_name: 'Again',
+      first_name: 'Again',
+      last_name: 'Again',
       organization_name: 'Again',
       email,
       password,

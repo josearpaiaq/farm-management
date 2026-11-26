@@ -30,9 +30,11 @@ import {
 import { ApiError } from '@/lib/api/client';
 import { MEMBER_ROLES, type Member, type MemberRole } from '@/lib/api/types';
 import { applyFieldErrors, errorMessage } from '@/lib/form';
+import { fullName } from '@/lib/format';
 
 interface InviteForm {
-  full_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   role: MemberRole;
 }
@@ -55,7 +57,7 @@ function InviteDialog({
     watch,
     formState: { errors },
   } = useForm<InviteForm>({
-    defaultValues: { full_name: '', email: '', role: 'viewer' },
+    defaultValues: { first_name: '', last_name: '', email: '', role: 'viewer' },
   });
 
   const onSubmit = handleSubmit((values) =>
@@ -84,14 +86,26 @@ function InviteDialog({
         </DialogHeader>
         <form onSubmit={(e) => void onSubmit(e)} className="space-y-4" noValidate>
           <div className="space-y-2">
-            <Label htmlFor="member-name">{t('members.name')}</Label>
+            <Label htmlFor="member-first-name">{t('members.firstName')}</Label>
             <Input
-              id="member-name"
-              {...register('full_name', { required: t('validation.required') })}
+              id="member-first-name"
+              {...register('first_name', { required: t('validation.required') })}
             />
-            {errors.full_name && (
+            {errors.first_name && (
               <p className="text-sm text-destructive">
-                {errors.full_name.message}
+                {errors.first_name.message}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="member-last-name">{t('members.lastName')}</Label>
+            <Input
+              id="member-last-name"
+              {...register('last_name', { required: t('validation.required') })}
+            />
+            {errors.last_name && (
+              <p className="text-sm text-destructive">
+                {errors.last_name.message}
               </p>
             )}
           </div>
@@ -159,7 +173,7 @@ export default function MembersPage() {
       { id: member.id, role },
       {
         onSuccess: () =>
-          toast.success(t('members.roleUpdated', { name: member.full_name })),
+          toast.success(t('members.roleUpdated', { name: fullName(member) })),
         onError: (error) => toast.error(errorMessage(error)),
       },
     );
@@ -191,7 +205,7 @@ export default function MembersPage() {
             <CardContent className="flex items-start justify-between gap-2">
               <div className="min-w-0 space-y-1">
                 <p className="font-medium">
-                  {member.full_name}
+                  {fullName(member)}
                   {member.id === me.data?.id && (
                     <span className="font-normal text-muted-foreground">
                       {' '}
@@ -247,7 +261,7 @@ export default function MembersPage() {
         onOpenChange={(open) => !open && setRemoving(null)}
         title={t('members.removeTitle')}
         description={t('members.removeDescription', {
-          name: removing?.full_name,
+          name: removing && fullName(removing),
         })}
         confirmLabel={t('members.remove')}
         pending={remove.isPending}

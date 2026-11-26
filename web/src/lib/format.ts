@@ -1,3 +1,11 @@
+// Display name of a user or member.
+export function fullName(person: {
+  first_name: string;
+  last_name: string;
+}): string {
+  return `${person.first_name} ${person.last_name}`.trim();
+}
+
 // Date-only API fields arrive as ISO strings at UTC midnight; parsing the
 // date part locally avoids the off-by-one-day shift in western timezones.
 export function parseDateOnly(iso: string): Date {

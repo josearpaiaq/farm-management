@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/sheet';
 import { useLogout, useMe } from '@/features/auth/api';
 import { cn } from '@/lib/utils';
+import { fullName } from '@/lib/format';
 
 const NAV_ITEMS = [
   { to: '/', key: 'nav.dashboard', icon: LayoutDashboard, end: true },
@@ -66,7 +67,7 @@ function UserSection() {
   return (
     <div className="flex items-center gap-2 border-t p-3">
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{me.data?.full_name}</p>
+        <p className="truncate text-sm font-medium">{me.data && fullName(me.data)}</p>
         <p className="truncate text-xs text-muted-foreground">
           {me.data?.email}
         </p>

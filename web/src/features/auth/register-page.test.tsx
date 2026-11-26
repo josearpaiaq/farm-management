@@ -8,7 +8,9 @@ import { renderAt } from '@/test/render';
 
 async function fillAndSubmit(password = 'long-enough-pass') {
   const user = userEvent.setup();
-  await user.type(await screen.findByLabelText('Nombre completo'), 'Ana');
+  await user.click(await screen.findByRole('button', { name: 'Crear mi finca' }));
+  await user.type(await screen.findByLabelText('Nombre'), 'Ana');
+  await user.type(screen.getByLabelText('Apellidos'), 'Pérez');
   await user.type(
     screen.getByLabelText('Nombre de la finca o empresa'),
     'La Esperanza',
@@ -19,6 +21,22 @@ async function fillAndSubmit(password = 'long-enough-pass') {
 }
 
 describe('RegisterPage', () => {
+  it('sends people joining an existing farm to code login', async () => {
+    const user = userEvent.setup();
+    renderAt('/register', <RegisterPage />);
+
+    await user.click(
+      await screen.findByRole('button', {
+        name: 'Unirme a una finca que ya existe',
+      }),
+    );
+
+    expect(screen.queryByLabelText('Correo electrónico')).toBeNull();
+    expect(
+      screen.getByRole('link', { name: 'Entrar con un código por correo' }),
+    ).toHaveAttribute('href', '/login/code');
+  });
+
   it('requires a password of at least 8 characters', async () => {
     renderAt('/register', <RegisterPage />);
 

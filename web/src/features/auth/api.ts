@@ -44,7 +44,8 @@ export const useLogin = () =>
 
 export const useRegister = () =>
   useSendEmail<{
-    full_name: string;
+    first_name: string;
+    last_name: string;
     organization_name: string;
     email: string;
     password: string;

@@ -46,7 +46,8 @@ CREATE TABLE users (
     role_id         smallint    NOT NULL REFERENCES roles (id),
     email           text        NOT NULL,
     password_hash   text        NOT NULL,
-    full_name       text        NOT NULL,
+    first_name      text        NOT NULL,
+    last_name       text        NOT NULL,
     -- NULL until the user proves ownership of the email with a code.
     email_verified_at timestamptz,
     created_at      timestamptz NOT NULL DEFAULT now(),

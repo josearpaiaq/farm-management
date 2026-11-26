@@ -14,7 +14,8 @@ async function main(): Promise<void> {
   const email = (process.env.SEED_OWNER_EMAIL ?? '').toLowerCase();
   const password = process.env.SEED_OWNER_PASSWORD;
   const orgName = process.env.SEED_ORG_NAME ?? 'My Farm';
-  const fullName = process.env.SEED_OWNER_NAME ?? 'Owner';
+  const firstName = process.env.SEED_OWNER_FIRST_NAME ?? 'Owner';
+  const lastName = process.env.SEED_OWNER_LAST_NAME ?? 'Account';
 
   if (!email || !password) {
     throw new Error('SEED_OWNER_EMAIL and SEED_OWNER_PASSWORD are required');
@@ -40,7 +41,8 @@ async function main(): Promise<void> {
         role_id: 1, // owner (seeded in db/schema.sql)
         email,
         password_hash: await argon2.hash(password, { type: argon2.argon2id }),
-        full_name: fullName,
+        first_name: firstName,
+        last_name: lastName,
         email_verified_at: new Date(),
       },
     });

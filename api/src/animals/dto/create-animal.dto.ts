@@ -19,6 +19,7 @@ import type {
   Species,
   Tenure,
 } from '../../common/constants/vocabularies';
+import { Trim } from '../../common/decorators/trim.decorator';
 
 export class CreateAnimalDto {
   // Optional client-generated UUID (v7 preferred); see plan, API Conventions.
@@ -37,6 +38,7 @@ export class CreateAnimalDto {
 
   // Primary visual tag; the natural key within the organization. The animal
   // and its identifier row are created atomically.
+  @Trim()
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)

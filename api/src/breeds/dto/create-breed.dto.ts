@@ -8,6 +8,7 @@ import {
 } from 'class-validator';
 import { SPECIES_CODES } from '../../common/constants/vocabularies';
 import type { Species } from '../../common/constants/vocabularies';
+import { Trim } from '../../common/decorators/trim.decorator';
 
 export class CreateBreedDto {
   // Optional client-generated UUID (v7 preferred); see plan, API Conventions.
@@ -18,6 +19,7 @@ export class CreateBreedDto {
   @IsIn(SPECIES_CODES)
   species: Species;
 
+  @Trim()
   @IsString()
   @IsNotEmpty()
   @MaxLength(100)

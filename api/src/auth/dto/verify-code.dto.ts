@@ -1,6 +1,8 @@
 import { IsEmail, Matches } from 'class-validator';
+import { Trim } from '../../common/decorators/trim.decorator';
 
 export class VerifyCodeDto {
+  @Trim()
   @IsEmail()
   email: string;
 

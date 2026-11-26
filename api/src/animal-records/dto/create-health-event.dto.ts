@@ -8,6 +8,7 @@ import {
 } from 'class-validator';
 import { HEALTH_EVENT_CODES } from '../../common/constants/vocabularies';
 import type { HealthEventType } from '../../common/constants/vocabularies';
+import { Trim } from '../../common/decorators/trim.decorator';
 
 export class CreateHealthEventDto {
   // Optional client-generated UUID (v7 preferred); see plan, API Conventions.
@@ -21,11 +22,13 @@ export class CreateHealthEventDto {
   @IsDateString()
   occurred_on: string;
 
+  @Trim()
   @IsOptional()
   @IsString()
   @MaxLength(200)
   product?: string;
 
+  @Trim()
   @IsOptional()
   @IsString()
   @MaxLength(2000)

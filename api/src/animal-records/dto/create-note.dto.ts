@@ -5,6 +5,7 @@ import {
   IsUUID,
   MaxLength,
 } from 'class-validator';
+import { Trim } from '../../common/decorators/trim.decorator';
 
 export class CreateNoteDto {
   // Optional client-generated UUID (v7 preferred); see plan, API Conventions.
@@ -12,6 +13,7 @@ export class CreateNoteDto {
   @IsUUID()
   id?: string;
 
+  @Trim()
   @IsString()
   @IsNotEmpty()
   @MaxLength(5000)

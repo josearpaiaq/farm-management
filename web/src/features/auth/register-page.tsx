@@ -13,7 +13,8 @@ import { ApiError } from '@/lib/api/client';
 import { applyFieldErrors, errorMessage } from '@/lib/form';
 
 interface RegisterForm {
-  full_name: string;
+  first_name: string;
+  last_name: string;
   organization_name: string;
   email: string;
   password: string;
@@ -65,12 +66,19 @@ export default function RegisterPage() {
         noValidate
       >
         <AuthField
-          id="full_name"
-          label={t('auth.fullName')}
-          autoComplete="name"
+          id="first_name"
+          label={t('auth.firstName')}
+          autoComplete="given-name"
           autoFocus
-          error={errors.full_name?.message}
-          {...register('full_name', required)}
+          error={errors.first_name?.message}
+          {...register('first_name', required)}
+        />
+        <AuthField
+          id="last_name"
+          label={t('auth.lastName')}
+          autoComplete="family-name"
+          error={errors.last_name?.message}
+          {...register('last_name', required)}
         />
         <AuthField
           id="organization_name"

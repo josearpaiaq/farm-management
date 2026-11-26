@@ -10,7 +10,8 @@ import { renderAt } from '@/test/render';
 const ownerRow: Member = {
   id: testUser.id,
   email: testUser.email,
-  full_name: testUser.full_name,
+  first_name: testUser.first_name,
+  last_name: testUser.last_name,
   role: 'owner',
   status: 'active',
   created_at: '2026-11-01T00:00:00Z',
@@ -25,10 +26,11 @@ function signedInAs(role: 'owner' | 'viewer') {
   );
 }
 
-async function invite(name: string, email: string) {
+async function invite(firstName: string, lastName: string, email: string) {
   const user = userEvent.setup();
   await user.click(await screen.findByRole('button', { name: /Invitar/ }));
-  await user.type(screen.getByLabelText('Nombre'), name);
+  await user.type(screen.getByLabelText('Nombre'), firstName);
+  await user.type(screen.getByLabelText('Apellidos'), lastName);
   await user.type(screen.getByLabelText('Correo electrónico'), email);
   await user.click(screen.getByRole('button', { name: 'Enviar invitación' }));
 }
@@ -39,7 +41,8 @@ describe('MembersPage', () => {
     const invited: Member = {
       id: 'user-2',
       email: 'papa@test.local',
-      full_name: 'Papá',
+      first_name: 'Papá',
+      last_name: 'Arpaia',
       role: 'viewer',
       status: 'invited',
       created_at: '2026-11-02T00:00:00Z',
@@ -56,13 +59,14 @@ describe('MembersPage', () => {
     );
     renderAt('/members', <MembersPage />);
 
-    await invite('Papá', 'papa@test.local');
+    await invite('Papá', 'Arpaia', 'papa@test.local');
 
-    expect(await screen.findByText('Papá')).toBeInTheDocument();
+    expect(await screen.findByText('Papá Arpaia')).toBeInTheDocument();
     expect(screen.getByText('Invitación pendiente')).toBeInTheDocument();
     // Read only unless the owner picks otherwise.
     expect(sent).toEqual({
-      full_name: 'Papá',
+      first_name: 'Papá',
+      last_name: 'Arpaia',
       email: 'papa@test.local',
       role: 'viewer',
     });
@@ -80,7 +84,7 @@ describe('MembersPage', () => {
     );
     renderAt('/members', <MembersPage />);
 
-    await invite('Vecino', 'vecino@test.local');
+    await invite('Vecino', 'Pérez', 'vecino@test.local');
 
     expect(
       await screen.findByText('Ese correo ya tiene una cuenta en la app'),
@@ -96,7 +100,7 @@ describe('MembersPage', () => {
         'Solo el dueño puede invitar, quitar o cambiar los permisos de las personas.',
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText(ownerRow.full_name)).toBeInTheDocument();
+    expect(screen.getByText('Owner Test')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Invitar/ })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Quitar' })).toBeNull();
   });

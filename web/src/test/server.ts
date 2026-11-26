@@ -6,7 +6,8 @@ export const API = `${window.location.origin}/api/v1`;
 export const testUser = {
   id: 'user-1',
   email: 'owner@test.local',
-  full_name: 'Owner',
+  first_name: 'Owner',
+  last_name: 'Test',
   role: 'owner',
   organization_id: 'org-1',
 };

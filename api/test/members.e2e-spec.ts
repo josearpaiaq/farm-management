@@ -17,7 +17,8 @@ import {
 interface Member {
   id: string;
   email: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   role: string;
   status: 'active' | 'invited';
 }
@@ -96,9 +97,15 @@ describe('Members (e2e)', () => {
   it('invites a read-only member, who joins the same organization with a code', async () => {
     const invited = await owner
       .post('/api/v1/members')
-      .send({ full_name: 'Papá', email: memberEmail.toUpperCase() })
+      .send({
+        first_name: '  Papá ',
+        last_name: ' Arpaia  ',
+        email: ` ${memberEmail.toUpperCase()} `,
+      })
       .expect(201);
     expect(invited.body as Member).toMatchObject({
+      first_name: 'Papá',
+      last_name: 'Arpaia',
       email: memberEmail,
       role: 'viewer',
       status: 'invited',
@@ -131,7 +138,7 @@ describe('Members (e2e)', () => {
   it('rejects inviting an email that already has an account', () => {
     return owner
       .post('/api/v1/members')
-      .send({ full_name: 'Otra vez', email: memberEmail })
+      .send({ first_name: 'Otra', last_name: 'Vez', email: memberEmail })
       .expect(409);
   });
 
@@ -179,7 +186,11 @@ describe('Members (e2e)', () => {
     // Managing people stays with the owner.
     await editor
       .post('/api/v1/members')
-      .send({ full_name: 'Vecino', email: 'vecino@test.local' })
+      .send({
+        first_name: 'Vecino',
+        last_name: 'Pérez',
+        email: 'vecino@test.local',
+      })
       .expect(403);
     await editor
       .patch(`/api/v1/members/${memberRow.id}`)

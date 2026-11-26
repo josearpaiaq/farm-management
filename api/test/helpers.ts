@@ -26,7 +26,8 @@ export async function createOrgWithOwner(
       password_hash: await argon2.hash(TEST_PASSWORD, {
         type: argon2.argon2id,
       }),
-      full_name: `E2E ${label}`,
+      first_name: 'E2E',
+      last_name: label,
       email_verified_at: new Date(),
     },
   });

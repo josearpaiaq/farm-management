@@ -13,7 +13,8 @@ export function useInviteMember() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (input: {
-      full_name: string;
+      first_name: string;
+      last_name: string;
       email: string;
       role: MemberRole;
     }) =>

@@ -74,7 +74,8 @@ export class AuthService {
             role_id: OWNER_ROLE_ID,
             email,
             password_hash: passwordHash,
-            full_name: dto.full_name,
+            first_name: dto.first_name,
+            last_name: dto.last_name,
           },
           include: { roles: true },
         });
@@ -132,7 +133,8 @@ export class AuthService {
     return {
       id: user.id,
       email: user.email,
-      full_name: user.full_name,
+      first_name: user.first_name,
+      last_name: user.last_name,
       role: user.roles.name,
       organization_id: user.organization_id,
     };

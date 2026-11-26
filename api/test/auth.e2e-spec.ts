@@ -51,7 +51,8 @@ describe('Auth (e2e)', () => {
         role_id: 1, // owner
         email,
         password_hash: await argon2.hash(password, { type: argon2.argon2id }),
-        full_name: 'E2E Owner',
+        first_name: 'E2E',
+        last_name: 'Owner',
         email_verified_at: new Date(),
       },
     });

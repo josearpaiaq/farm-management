@@ -8,7 +8,8 @@ import { renderAt } from '@/test/render';
 
 async function fillAndSubmit(password = 'long-enough-pass') {
   const user = userEvent.setup();
-  await user.type(await screen.findByLabelText('Nombre completo'), 'Ana');
+  await user.type(await screen.findByLabelText('Nombre'), 'Ana');
+  await user.type(screen.getByLabelText('Apellidos'), 'Pérez');
   await user.type(
     screen.getByLabelText('Nombre de la finca o empresa'),
     'La Esperanza',

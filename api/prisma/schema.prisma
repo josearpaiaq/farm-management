@@ -263,7 +263,8 @@ model users {
   role_id           Int              @db.SmallInt
   email             String
   password_hash     String
-  full_name         String
+  first_name        String
+  last_name         String
   email_verified_at DateTime?        @db.Timestamptz(6)
   created_at        DateTime         @default(now()) @db.Timestamptz(6)
   updated_at        DateTime         @default(now()) @db.Timestamptz(6)

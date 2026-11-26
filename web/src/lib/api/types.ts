@@ -48,7 +48,8 @@ export interface Paginated<T> {
 export interface AuthUser {
   id: string;
   email: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   role: string;
   organization_id: string;
 }
@@ -61,7 +62,8 @@ export type MemberRole = (typeof MEMBER_ROLES)[number];
 export interface Member {
   id: string;
   email: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   role: 'owner' | MemberRole;
   // 'invited' until their first sign-in with an emailed code.
   status: 'active' | 'invited';
